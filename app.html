@@ -37,11 +37,10 @@
             </button>
         </div>
 
-        <!-- NEW: Dedicated Self Profile Preview Hub -->
+        <!-- Self Profile Preview Hub (Reference: image_1b9844.png) -->
         <div class="space-y-3">
             <h2 class="text-xs uppercase tracking-[0.2em] text-gray-400 font-semibold">Your Presentation Identity</h2>
             <div id="myProfileCardContainer">
-                <!-- Logged-in user's custom preview card renders here -->
                 <p class="text-xs text-gray-600 text-center py-4 italic">Rendering presentation card...</p>
             </div>
         </div>
@@ -56,6 +55,12 @@
             </div>
         </div>
     </main>
+
+    <!-- NEW: Fullscreen Media Inspection Lightbox Modal -->
+    <div id="lightboxModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-center items-center p-4">
+        <button onclick="closeLightbox()" class="absolute top-4 right-4 text-xs font-bold tracking-widest text-gray-400 hover:text-white uppercase bg-[#111] px-4 py-2 rounded-lg border border-[#333]">Close View</button>
+        <div id="lightboxContent" class="max-w-full max-h-[80vh] flex items-center justify-center rounded-lg overflow-hidden"></div>
+    </div>
 
     <!-- Profile Management Panel Modal -->
     <div id="profileModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col max-w-md mx-auto overflow-y-auto">
@@ -147,7 +152,7 @@
                 messagingCapCount = data.message_count || 0;
                 renderStatusBanner();
                 populateProfileFields();
-                renderMyProfilePreview(); // Renders the creator's preview card
+                renderMyProfilePreview();
                 loadMatchingFeed();
             }
         }
@@ -166,22 +171,38 @@
             }
         }
 
-        // Renders the logged in user's profile card exactly how others view it
+        // Upgraded to handle individual View & Delete overlays (Modifying layout from image_1b9844.png)
         function renderMyProfilePreview() {
             const container = document.getElementById('myProfileCardContainer');
             if (!currentUserProfile) return;
 
-            let publicMedia = currentUserProfile.public_image 
-                ? `<img src="${currentUserProfile.public_image}" class="w-full h-full object-cover">` 
-                : `<div class="w-full h-full bg-gradient-to-tr from-[#333] to-[#111] flex items-center justify-center text-[10px] text-gray-500">No Image Uploaded</div>`;
+            // Generate layout wrapper with actions for Public card
+            let publicMedia = '';
+            if (currentUserProfile.public_image) {
+                publicMedia = `
+                    <img src="${currentUserProfile.public_image}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center space-x-2 transition-opacity z-20">
+                        <button onclick="viewMedia('${currentUserProfile.public_image}', false)" class="bg-black/80 hover:bg-black p-1.5 rounded text-xs font-bold text-white uppercase tracking-wider">View</button>
+                        <button onclick="deleteMediaColumn('public_image')" class="bg-[#8d0b0b] hover:bg-red-700 p-1.5 rounded text-xs font-bold text-white uppercase tracking-wider">Delete</button>
+                    </div>`;
+            } else {
+                publicMedia = `<div class="w-full h-full bg-gradient-to-tr from-[#333] to-[#111] flex items-center justify-center text-[10px] text-gray-500">No Image Uploaded</div>`;
+            }
             
+            // Generate layout wrapper with actions for Vault card
             let vaultMedia = '';
             if (currentUserProfile.premium_vault_media) {
-                if (currentUserProfile.premium_vault_media.endsWith('.mp4')) {
-                    vaultMedia = `<video src="${currentUserProfile.premium_vault_media}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>`;
-                } else {
-                    vaultMedia = `<img src="${currentUserProfile.premium_vault_media}" class="w-full h-full object-cover">`;
-                }
+                const isVideo = currentUserProfile.premium_vault_media.endsWith('.mp4');
+                let element = isVideo 
+                    ? `<video src="${currentUserProfile.premium_vault_media}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>`
+                    : `<img src="${currentUserProfile.premium_vault_media}" class="w-full h-full object-cover">`;
+
+                vaultMedia = `
+                    ${element}
+                    <div class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center space-x-2 transition-opacity z-20">
+                        <button onclick="viewMedia('${currentUserProfile.premium_vault_media}', ${isVideo})" class="bg-black/80 hover:bg-black p-1.5 rounded text-xs font-bold text-white uppercase tracking-wider">View</button>
+                        <button onclick="deleteMediaColumn('premium_vault_media')" class="bg-[#8d0b0b] hover:bg-red-700 p-1.5 rounded text-xs font-bold text-white uppercase tracking-wider">Delete</button>
+                    </div>`;
             } else {
                 vaultMedia = `<div class="w-full h-full bg-gradient-to-tr from-[#222] to-[#0a0a0a] flex items-center justify-center text-[10px] text-gray-600">Vault Empty</div>`;
             }
@@ -197,11 +218,11 @@
                     </div>
                     
                     <div class="grid grid-cols-2 gap-3 h-40">
-                        <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-[#222] relative">
+                        <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-[#222] relative group">
                             <div class="absolute top-1.5 left-1.5 bg-black/70 text-[9px] uppercase px-1.5 py-0.5 rounded text-gray-300 z-10">Public Card</div>
                             ${publicMedia}
                         </div>
-                        <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-[#222] relative">
+                        <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-[#222] relative group">
                             <div class="absolute top-1.5 left-1.5 bg-amber-600 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded text-black z-10">Premium Vault</div>
                             ${vaultMedia}
                         </div>
@@ -212,6 +233,37 @@
                     </div>
                 </div>
             `;
+        }
+
+        // Lightbox controller to preview individual items safely
+        function viewMedia(url, isVideo) {
+            const content = document.getElementById('lightboxContent');
+            if (isVideo) {
+                content.innerHTML = `<video src="${url}" controls autoplay loop class="max-w-full max-h-[75vh] object-contain rounded border border-[#222]"></video>`;
+            } else {
+                content.innerHTML = `<img src="${url}" class="max-w-full max-h-[75vh] object-contain rounded border border-[#222]">`;
+            }
+            document.getElementById('lightboxModal').classList.remove('hidden');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightboxContent').innerHTML = '';
+            document.getElementById('lightboxModal').classList.add('hidden');
+        }
+
+        // Direct isolated deletion hook to clear specified asset row strings
+        async function deleteMediaColumn(columnName) {
+            if (!confirm(`Are you sure you want to permanently clear this file from your presentation grid?`)) return;
+
+            const updatePayload = {};
+            updatePayload[columnName] = null;
+
+            const { error } = await _supabase.from('profiles').update(updatePayload).eq('id', currentUserProfile.id);
+            if (error) {
+                alert(`Deletion failed: ${error.message}`);
+            } else {
+                await fetchUserProfile(currentUserProfile.id);
+            }
         }
 
         function populateProfileFields() {
