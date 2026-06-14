@@ -1,1 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Erosia — Sanctuary</title>
+    <!-- Tailwind CSS Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Supabase Core Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #0a0a0a; color: #ffffff; font-family: system-ui, sans-serif; }
+        .blurred { filter: blur(20px); pointer-events: none; user-select: none; }
+        .hold-to-view { transition: filter 0.2s ease; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen bg-[#0a0a0a]">
 
+    <!-- Top Navigation Bar -->
+    <header class="w-full bg-[#121212] border-b border-[#222] p-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="text-sm tracking-[0.3em] text-[#8d0b0b] font-bold uppercase">L'Erosia</div>
+        <button id="logoutBtn" class="text-xs uppercase tracking-wider text-gray-400 hover:text-white cursor-pointer">Exit</button>
+    </header>
+
+    <!-- Main Workspace Dashboard -->
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 space-y-6 pb-24">
+        
+        <!-- Premium Status Banner -->
+        <div id="tierStatus" class="bg-[#121212] border border-[#222] rounded-xl p-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs text-gray-400 uppercase tracking-wider">Account Status</p>
+                <p id="statusLabel" class="text-sm font-bold text-gray-300">Evaluating Profile...</p>
+            </div>
+            <button id="upgradeBtn" class="hidden bg-[#8d0b0b] hover:bg-[#b00e0e] text-white text-xs uppercase font-bold tracking-widest px-4 py-2 rounded transition-colors cursor-pointer">
+                Unlock ($27)
+            </button>
+        </div>
+
+        <!-- Section: Discovered Matches Feed -->
+        <div class="space-y-3">
+            <h2 class="text-xs uppercase tracking-[0.2em] text-[#8d0b0b] font-semibold">Matched Desires</h2>
+            <div id="matchesFeed" class="space-y-4">
+                <!-- Dynamically loaded match profiles populate here -->
+                <p class="text-sm text-gray-500 text-center py-8">Scanning European sectors for profiles...</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Dedicated Floating Messaging Arena Container -->
+    <div id="chatModal" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col max-w-md mx-auto">
+        <header class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div id="chatTargetAvatar" class="w-8 h-8 rounded-full bg-[#222] overflow-hidden"></div>
+                <span id="chatTargetName" class="text-sm font-medium">Chat</span>
+            </div>
+            <button onclick="closeChat()" class="text-gray-400 hover:text-white text-sm uppercase">Close</button>
+        </header>
+
+        <!-- Message History Log Window -->
+        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 text-sm">
+            <!-- Text fragments print dynamically here -->
+        </div>
+
+        <!-- Interactive Paywall Gate Overlays -->
+        <div id="chatPaywall" class="hidden p-6 bg-[#121212] border-t border-[#8d0b0b] text-center space-y-3">
+            <p class="text-sm font-semibold text-white">Free Interaction Limit Achieved</p>
+            <p class="text-xs text-gray-400">To maintain premium privacy standards, subscribing unlocks unlimited ongoing communication.</p>
+            <button onclick="simulateUpgrade()" class="w-full bg-[#8d0b0b] text-white text-xs uppercase font-bold tracking-widest py-3 rounded">
+                Upgrade to Premium ($27/mo)
+            </button>
+        </div>
+
+        <!-- Text Composition Panel -->
+        <div id="chatInputArea" class="p-4 bg-[#121212] border-t border-[#222] flex items-center space-x-2">
+            <input type="text" id="messageInput" placeholder="Send typed desire..." class="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg p-2 text-sm focus:outline-none focus:border-[#8d0b0b]">
+            <button onclick="sendMessage()" class="bg-[#8d0b0b] px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wider">Send</button>
+        </div>
+    </div>
+
+    <!-- Execution Script Engine Linked to Supabase Parameters -->
+    <script>
+        const SUPABASE_URL = "https://njonmqbsqfvmwowbgfeb.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_u3_U6zXwc6UToJukPAkCPg_3ovi3yI9";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUserProfile = null;
+        let messagingCapCount = 0;
+
+        // Verify Session Authenticity upon loading
+        window.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            await fetchUserProfile(session.user.id);
+        });
+
+        async function fetchUserProfile(uid) {
+            const { data, error } = await _supabase.from('profiles').select('*').eq('id', uid).single();
+            if (data) {
+                currentUserProfile = data;
+                messagingCapCount = data.message_count || 0;
+                renderStatusBanner();
+                loadMatchingFeed();
+            }
+        }
+
+        function renderStatusBanner() {
+            const label = document.getElementById('statusLabel');
+            const btn = document.getElementById('upgradeBtn');
+            if (currentUserProfile.is_subscribed) {
+                label.innerText = "Verified Premium Elite";
+                label.className = "text-sm font-bold text-emerald-400";
+                btn.classList.add('hidden');
+            } else {
+                label.innerText = "Standard Member (Limited)";
+                label.className = "text-sm font-bold text-amber-500";
+                btn.classList.remove('hidden');
+            }
+        }
+
+        async function loadMatchingFeed() {
+            // Advanced Cross-Matching Query Algorithm Logic executed dynamically
+            const { data: matches, error } = await _supabase.from('profiles')
+                .select('*')
+                .eq('gender', currentUserProfile.target_gender)
+                .eq('target_gender', currentUserProfile.gender)
+                .neq('id', currentUserProfile.id)
+                .limit(10);
+
+            const feed = document.getElementById('matchesFeed');
+            feed.innerHTML = '';
+
+            if (!matches || matches.length === 0) {
+                feed.innerHTML = '<p class="text-xs text-gray-500 text-center py-8">Awaiting new elite entries matching your trajectory...</p>';
+                return;
+            }
+
+            matches.forEach(profile => {
+                // Determine whether user gets the premium blur treatment
+                const needsBlur = !currentUserProfile.is_subscribed;
+                const blurClass = needsBlur ? 'blurred' : '';
+                
+                const card = document.createElement('div');
+                card.className = "bg-[#121212] border border-[#222] rounded-xl p-4 space-y-4";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-sm font-semibold text-white">${profile.name}</span>
+                            <span class="text-xs text-gray-400 ml-2">${profile.age} • ${profile.city}</span>
+                        </div>
+                        <span class="text-[10px] uppercase tracking-widest bg-black text-[#8d0b0b] border border-[#333] px-2 py-0.5 rounded">Match</span>
+                    </div>
+                    
+                    <!-- Media Presentation Display Grid Container -->
+                    <div class="relative w-full h-48 bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#222]">
+                        <div class="absolute inset-0 flex items-center justify-center text-xs text-gray-600">Premium Vault Image</div>
+                        <!-- Blurred image implementation container fallback -->
+                        <div class="w-full h-full bg-gradient-to-tr from-[#300] to-[#111] ${blurClass} hold-to-view"></div>
+                        
+                        ${needsBlur ? `
+                            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
+                                <p class="text-xs font-medium text-gray-200 mb-2">Image Protected By Premium Encryption</p>
+                                <button onclick="simulateUpgrade()" class="bg-[#8d0b0b] text-[10px] text-white font-bold uppercase tracking-wider px-3 py-1.5 rounded shadow">Unlock Member Details</button>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="flex flex-wrap gap-1">
+                        ${profile.desires.map(d => `<span class="text-[10px] bg-[#1a1a1a] px-2 py-1 rounded text-gray-400 border border-[#222]">${d}</span>`).join('')}
+                    </div>
+
+                    <button onclick="openChat('${profile.id}', '${profile.name}')" class="w-full bg-[#161616] hover:bg-[#222] text-gray-300 hover:text-white border border-[#222] text-xs uppercase tracking-widest py-2 rounded transition-colors font-medium">
+                        Initiate Connection
+                    </button>
+                `;
+                feed.appendChild(card);
+            });
+        }
+
+        function openChat(targetId, targetName) {
+            document.getElementById('chatTargetName').innerText = targetName;
+            document.getElementById('chatModal').classList.remove('hidden');
+            
+            const msgContainer = document.getElementById('chatMessages');
+            msgContainer.innerHTML = `
+                <div class="text-center text-gray-600 text-xs py-4 italic">Secure connection route initialized.</div>
+                <div class="bg-[#1a1a1a] border border-[#222] rounded-lg p-3 text-gray-300 max-w-[85%]">
+                    Hello there, I saw your profile variables and noticed our core desires align perfectly. Where in Europe are you based out of?
+                </div>
+            `;
+            
+            checkChatPermissions();
+        }
+
+        function checkChatPermissions() {
+            const inputArea = document.getElementById('chatInputArea');
+            const paywall = document.getElementById('chatPaywall');
+            
+            if (!currentUserProfile.is_subscribed && messagingCapCount >= 10) {
+                inputArea.classList.add('hidden');
+                paywall.classList.remove('hidden');
+            } else {
+                inputArea.classList.remove('hidden');
+                paywall.classList.add('hidden');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            if (!input.value.trim()) return;
+
+            const msgContainer = document.getElementById('chatMessages');
+            
+            // Render sender's message block instantly in UI
+            const userMsg = document.createElement('div');
+            userMsg.className = "bg-[#8d0b0b] text-white rounded-lg p-3 max-w-[85%] ml-auto text-right font-medium";
+            userMsg.innerText = input.value;
+            msgContainer.appendChild(userMsg);
+            
+            input.value = '';
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+
+            // Increment database tracking loop counters
+            messagingCapCount++;
+            
+            if (!currentUserProfile.is_subscribed) {
+                await _supabase.from('profiles').update({ message_count: messagingCapCount }).eq('id', currentUserProfile.id);
+                
+                // Trigger soft counter responses to guide the flow structure
+                if (messagingCapCount >= 10) {
+                    setTimeout(() => {
+                        checkChatPermissions();
+                    }, 800);
+                }
+            }
+        }
+
+        function closeChat() {
+            document.getElementById('chatModal').classList.add('hidden');
+        }
+
+        async function simulateUpgrade() {
+            // Emulate backend webhook checkout confirmations for immediate validation
+            const { error } = await _supabase.from('profiles').update({ is_subscribed: true }).eq('id', currentUserProfile.id);
+            if (!error) {
+                alert('Subscription processing successful! Premium privileges deployed inside your sanctuary workspace layout.');
+                location.reload();
+            }
+        }
+
+        document.getElementById('upgradeBtn').addEventListener('click', simulateUpgrade);
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await _supabase.auth.signOut();
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
