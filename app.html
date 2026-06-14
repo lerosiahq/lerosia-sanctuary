@@ -14,8 +14,39 @@
 </head>
 <body class="flex flex-col min-h-screen bg-[#0a0a0a]">
 
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 space-y-6 pb-24">
+        <div id="tierStatus" class="bg-[#121212] border border-[#222] rounded-xl p-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs text-gray-400 uppercase tracking-wider">Account Status</p>
+                <p id="statusLabel" class="text-sm font-bold text-gray-300">Evaluating...</p>
+            </div>
+            <button id="upgradeBtn" class="hidden bg-[#8d0b0b] text-white text-xs uppercase font-bold px-4 py-2 rounded">Unlock ($27)</button>
+        </div>
+        <div id="myProfileCardContainer"></div>
+    </main>
+
+    <div id="lightboxModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-center items-center p-4">
+        <button onclick="closeLightbox()" class="absolute top-4 right-4 text-xs font-bold text-gray-400 border border-[#333] px-4 py-2 rounded-lg">CLOSE</button>
+        <div id="lightboxContent" class="max-w-full max-h-[80vh] flex items-center justify-center"></div>
+    </div>
+
+    <div id="chatModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-between max-w-md mx-auto">
+        <header class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between">
+            <span id="chatTargetName" class="text-sm font-bold">Chat</span>
+            <button onclick="closeChat()" class="text-xs text-gray-400">CLOSE</button>
+        </header>
+        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3"></div>
+        <div id="chatInputArea" class="p-3 bg-[#121212] border-t border-[#222] flex space-x-2">
+            <input type="text" id="messageInput" placeholder="Send typed desire..." class="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#8d0b0b]">
+            <button onclick="sendMessage()" class="bg-[#8d0b0b] px-5 py-2.5 rounded-lg text-sm font-bold uppercase text-white">Send</button>
+        </div>
+    </div>
+
     <script>
-        // ... Initialization remains unchanged ...
+        const _supabase = supabase.createClient("https://njonmqbsqfvmwowbgfeb.supabase.co", "sb_publishable_u3_U6zXwc6UToJukPAkCPg_3ovi3yI9");
+        let currentUserProfile = null;
+
+        // --- Core Logic ---
 
         async function sendMessage() {
             const input = document.getElementById('messageInput');
@@ -33,51 +64,45 @@
 
             const msgContainer = document.getElementById('chatMessages');
             const userMsg = document.createElement('div');
-            userMsg.className = "bg-[#8d0b0b] text-white rounded-lg p-3 max-w-[85%] shrink-0 self-end text-right font-medium";
+            userMsg.className = "bg-[#8d0b0b] text-white rounded-lg p-3 max-w-[85%] self-end text-right";
             userMsg.innerText = message; 
             msgContainer.appendChild(userMsg);
-            
             input.value = ''; 
             msgContainer.scrollTop = msgContainer.scrollHeight;
         }
 
         function renderChatMessages(targetId, premiumVaultMedia) {
             const msgContainer = document.getElementById('chatMessages');
-            // Check if current user is a subscriber
-            const canSee = currentUserProfile.is_subscribed;
+            const canSee = currentUserProfile?.is_subscribed; // Subscriber Privacy Logic
             const isVideo = premiumVaultMedia?.includes('.mp4');
-            
-            // Apply blur filter if not a subscriber
             const blurClass = canSee ? "" : "blur-xl grayscale";
             const onClickAction = canSee ? `onclick="viewMedia('${premiumVaultMedia}', ${isVideo})"` : "";
 
-            let ppvPayloadHTML = '';
-
-            if (!premiumVaultMedia) {
-                ppvPayloadHTML = `<p class="text-[11px] text-gray-600 italic">No premium assets deployed.</p>`;
-            } else {
-                ppvPayloadHTML = `
-                    <div class="w-full bg-[#141414] border border-[#8d0b0b]/40 rounded-lg p-2 space-y-2 shrink-0 ${canSee ? 'cursor-pointer hover:border-amber-500/50' : ''}" ${onClickAction}>
-                        <div class="flex justify-between items-center text-[9px] text-gray-400">
-                            <span class="text-amber-500 font-bold uppercase">${canSee ? '⚡ Unlocked Stream' : '🔒 Locked Premium Vault'}</span>
+            const ppvPayloadHTML = premiumVaultMedia ? `
+                <div class="w-full bg-[#141414] border border-[#8d0b0b]/40 rounded-lg p-2 ${canSee ? 'cursor-pointer' : ''}" ${onClickAction}>
+                    <div class="text-[9px] text-amber-500 font-bold uppercase">${canSee ? '⚡ Unlocked Stream' : '🔒 Locked Premium Vault'}</div>
+                    <div class="w-full h-44 bg-black rounded-md overflow-hidden relative">
+                        <div class="${blurClass} w-full h-full">
+                            ${isVideo ? `<video src="${premiumVaultMedia}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>` : `<img src="${premiumVaultMedia}" class="w-full h-full object-cover">`}
                         </div>
-                        <div class="w-full h-44 bg-black rounded-md overflow-hidden relative">
-                            <div class="${blurClass} w-full h-full">
-                                ${isVideo ? `<video src="${premiumVaultMedia}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>` : `<img src="${premiumVaultMedia}" class="w-full h-full object-cover">`}
-                            </div>
-                            ${!canSee ? '<div class="absolute inset-0 flex items-center justify-center font-bold text-[10px] tracking-widest text-white uppercase">PURCHASE TO VIEW</div>' : ''}
-                        </div>
-                    </div>`;
-            }
+                        ${!canSee ? '<div class="absolute inset-0 flex items-center justify-center font-bold text-[10px] text-white uppercase">PURCHASE TO VIEW</div>' : ''}
+                    </div>
+                </div>` : `<p class="text-xs text-gray-600 italic">No premium assets.</p>`;
 
             msgContainer.innerHTML = `
-                <div class="text-center text-gray-600 text-xs py-2 italic shrink-0 w-full">Connection secure & end-to-end encrypted.</div>
-                <div class="bg-[#1a1a1a] border border-[#222] rounded-lg p-3 text-gray-300 max-w-[85%] shrink-0 self-start">Hello! My vault is active.</div>
-                <div class="w-full max-w-[85%] self-start mt-1">${ppvPayloadHTML}</div>
+                <div class="bg-[#1a1a1a] p-3 text-gray-300 max-w-[85%]">Hello! My vault is active.</div>
+                <div class="w-full max-w-[85%] mt-1">${ppvPayloadHTML}</div>
             `;
         }
 
-        // ... Remainder of your helper functions ...
+        function viewMedia(url, isVideo) {
+            const content = document.getElementById('lightboxContent');
+            content.innerHTML = isVideo ? `<video src="${url}" controls autoplay class="max-h-[75vh]"></video>` : `<img src="${url}" class="max-h-[75vh]">`;
+            document.getElementById('lightboxModal').classList.remove('hidden');
+        }
+
+        function closeLightbox() { document.getElementById('lightboxModal').classList.add('hidden'); }
+        function closeChat() { document.getElementById('chatModal').classList.add('hidden'); }
     </script>
 </body>
 </html>
