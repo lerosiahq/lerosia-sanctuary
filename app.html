@@ -1,149 +1,489 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>L'Erosia — Sanctuary</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { background-color: #0a0a0a; color: #ffffff; font-family: system-ui, sans-serif; }
-        #chatMessages::-webkit-scrollbar { display: none; }
-        #chatMessages { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Erosia — Sanctuary</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #0a0a0a; color: #ffffff; font-family: system-ui, sans-serif; }
+        #chatMessages::-webkit-scrollbar { display: none; }
+        #chatMessages { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
 <body class="flex flex-col min-h-screen bg-[#0a0a0a]">
 
-    <header class="w-full bg-[#121212] border-b border-[#222] p-4 flex justify-between items-center sticky top-0 z-50">
-        <div class="text-sm tracking-[0.3em] text-[#8d0b0b] font-bold uppercase">L'Erosia</div>
-        <div class="flex items-center space-x-4">
-            <button onclick="toggleProfileModal(true)" class="text-xs uppercase tracking-wider text-gray-300 hover:text-[#8d0b0b] cursor-pointer transition-colors">Edit Profile</button>
-            <button id="logoutBtn" class="text-xs uppercase tracking-wider text-gray-400 hover:text-white cursor-pointer">Exit</button>
-        </div>
-    </header>
+    <header class="w-full bg-[#121212] border-b border-[#222] p-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="text-sm tracking-[0.3em] text-[#8d0b0b] font-bold uppercase">L'Erosia</div>
+        <div class="flex items-center space-x-4">
+            <button onclick="toggleProfileModal(true)" class="text-xs uppercase tracking-wider text-gray-300 hover:text-[#8d0b0b] cursor-pointer transition-colors">Edit Profile</button>
+            <button id="logoutBtn" class="text-xs uppercase tracking-wider text-gray-400 hover:text-white cursor-pointer">Exit</button>
+        </div>
+    </header>
 
-    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 space-y-6 pb-24">
-        <div id="tierStatus" class="bg-[#121212] border border-[#222] rounded-xl p-4 flex justify-between items-center">
-            <div>
-                <p class="text-xs text-gray-400 uppercase tracking-wider">Account Status</p>
-                <p id="statusLabel" class="text-sm font-bold text-gray-300">Evaluating Profile...</p>
-            </div>
-            <button id="upgradeBtn" class="hidden bg-[#8d0b0b] hover:bg-[#b00e0e] text-white text-xs uppercase font-bold tracking-widest px-4 py-2 rounded transition-colors cursor-pointer">
-                Unlock ($27)
-            </button>
-        </div>
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 space-y-6 pb-24">
+        
+        <div id="tierStatus" class="bg-[#121212] border border-[#222] rounded-xl p-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs text-gray-400 uppercase tracking-wider">Account Status</p>
+                <p id="statusLabel" class="text-sm font-bold text-gray-300">Evaluating Profile...</p>
+            </div>
+            <button id="upgradeBtn" class="hidden bg-[#8d0b0b] hover:bg-[#b00e0e] text-white text-xs uppercase font-bold tracking-widest px-4 py-2 rounded transition-colors cursor-pointer">
+                Unlock ($27)
+            </button>
+        </div>
 
-        <div class="space-y-3">
-            <h2 class="text-xs uppercase tracking-[0.2em] text-gray-400 font-semibold">Your Presentation Identity</h2>
-            <div id="myProfileCardContainer">
-                <p class="text-xs text-gray-600 text-center py-4 italic">Rendering presentation card...</p>
-            </div>
-        </div>
+        <div class="space-y-3">
+            <h2 class="text-xs uppercase tracking-[0.2em] text-gray-400 font-semibold">Your Presentation Identity</h2>
+            <div id="myProfileCardContainer">
+                <p class="text-xs text-gray-600 text-center py-4 italic">Rendering presentation card...</p>
+            </div>
+        </div>
 
-        <hr class="border-[#222]">
+        <hr class="border-[#222]">
 
-        <div class="space-y-3">
-            <h2 class="text-xs uppercase tracking-[0.2em] text-[#8d0b0b] font-semibold">Matched Desires</h2>
-            <div id="matchesFeed" class="space-y-4">
-                <p class="text-sm text-gray-500 text-center py-8">Scanning European sectors for profiles...</p>
-            </div>
-        </div>
-    </main>
+        <div class="space-y-3">
+            <h2 class="text-xs uppercase tracking-[0.2em] text-[#8d0b0b] font-semibold">Matched Desires</h2>
+            <div id="matchesFeed" class="space-y-4">
+                <p class="text-sm text-gray-500 text-center py-8">Scanning European sectors for profiles...</p>
+            </div>
+        </div>
+    </main>
 
-    <div id="lightboxModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-center items-center p-4">
-        <button onclick="closeLightbox()" class="absolute top-4 right-4 text-xs font-bold tracking-widest text-gray-400 hover:text-white uppercase bg-[#111] px-4 py-2 rounded-lg border border-[#333]">Close View</button>
-        <div id="lightboxContent" class="max-w-full max-h-[80vh] flex items-center justify-center rounded-lg overflow-hidden"></div>
-    </div>
+    <div id="lightboxModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-center items-center p-4">
+        <button onclick="closeLightbox()" class="absolute top-4 right-4 text-xs font-bold tracking-widest text-gray-400 hover:text-white uppercase bg-[#111] px-4 py-2 rounded-lg border border-[#333]">Close View</button>
+        <div id="lightboxContent" class="max-w-full max-h-[80vh] flex items-center justify-center rounded-lg overflow-hidden"></div>
+    </div>
 
-    <div id="targetProfilePanel" class="fixed inset-x-0 top-[73px] max-w-md mx-auto bg-[#121212] border-b border-[#333] shadow-2xl p-4 hidden z-40 transition-all">
-        <div id="targetPanelContent"></div>
-    </div>
+    <div id="targetProfilePanel" class="fixed inset-x-0 top-[73px] max-w-md mx-auto bg-[#121212] border-b border-[#333] shadow-2xl p-4 hidden z-40 transition-all">
+        <div id="targetPanelContent"></div>
+    </div>
 
-    <div id="profileModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col max-w-md mx-auto overflow-y-auto">
-        <header class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between sticky top-0">
-            <span class="text-sm font-medium uppercase tracking-wider text-gray-200">Customize Identity</span>
-            <button onclick="toggleProfileModal(false)" class="text-gray-400 hover:text-white text-sm uppercase cursor-pointer">Close</button>
-        </header>
-        <form id="profileForm" class="p-6 space-y-5">
-            <input type="text" id="profileName" placeholder="Display Name" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm text-white">
-            <div class="grid grid-cols-2 gap-4">
-                <input type="number" id="profileAge" placeholder="Age" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm text-white">
-                <input type="text" id="profileCity" placeholder="City" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm text-white">
-            </div>
-            <input type="text" id="profileDesires" placeholder="Core Desires" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm text-white">
-            <button type="submit" class="w-full bg-[#8d0b0b] p-3 rounded-lg text-xs font-bold uppercase text-white">Synchronize Identity</button>
-        </form>
-    </div>
+    <div id="profileModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col max-w-md mx-auto overflow-y-auto">
+        <header class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between sticky top-0">
+            <span class="text-sm font-medium uppercase tracking-wider text-gray-200">Customize Identity</span>
+            <button onclick="toggleProfileModal(false)" class="text-gray-400 hover:text-white text-sm uppercase cursor-pointer">Close</button>
+        </header>
+        
+        <form id="profileForm" class="p-6 space-y-5">
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">Display Name</label>
+                <input type="text" id="profileName" required class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm focus:outline-none focus:border-[#8d0b0b] text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">Age</label>
+                    <input type="number" id="profileAge" required class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm focus:outline-none focus:border-[#8d0b0b] text-white">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">Location City</label>
+                    <input type="text" id="profileCity" required class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm focus:outline-none focus:border-[#8d0b0b] text-white">
+                </div>
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">Core Desires / Tags</label>
+                <input type="text" id="profileDesires" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm focus:outline-none focus:border-[#8d0b0b] text-white">
+            </div>
+            
+            <div class="border-t border-[#222] pt-4 space-y-4">
+                <label class="block text-[10px] uppercase tracking-widest text-[#8d0b0b] font-bold">Media Portfolio Settings</label>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">1. Public Gallery Image</label>
+                    <input type="file" id="publicImageFile" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#1a1a1a] file:text-white file:hover:bg-[#252525] cursor-pointer">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-amber-500 mb-1">2. Premium PPV Vault Media (Max 15s Video or Image)</label>
+                    <input type="file" id="premiumVaultFile" accept="image/*,video/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#1a1a1a] file:text-amber-500 file:hover:bg-[#252525] cursor-pointer">
+                </div>
+            </div>
 
-    <div id="chatModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-between max-w-md mx-auto">
-        <header onclick="toggleTargetProfilePanel()" class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between shrink-0 cursor-pointer">
-            <span id="chatTargetName" class="text-sm font-bold text-white">Chat</span>
-            <button onclick="event.stopPropagation(); closeChat();" class="text-gray-400 text-sm uppercase">Close</button>
-        </header>
-        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3"></div>
-        <div id="chatPaywall" class="hidden p-6 bg-[#121212] border-t border-[#8d0b0b] text-center">
-            <button onclick="simulateUpgrade()" class="w-full bg-[#8d0b0b] text-white text-xs font-bold p-3 rounded-lg">Upgrade to Premium ($27)</button>
-        </div>
-        <div id="chatControlsContainer" class="bg-[#121212] border-t border-[#222]">
-            <div id="hybridMediaTray" class="hidden p-3 bg-[#171717] border-b border-[#252525]">
-                <div class="flex justify-between items-center mb-2">
-                    <span id="trayTitle" class="text-[10px] text-gray-400 uppercase">Select Asset</span>
-                    <button onclick="closeMediaTray()" class="text-gray-500">✕</button>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <div id="trayUploadButton" class="w-16 h-16 border border-dashed border-[#444] rounded-lg flex items-center justify-center cursor-pointer">➕</div>
-                    <div id="trayPreuploadedPreview" class="relative w-16 h-16 rounded-lg overflow-hidden border border-[#333] hidden"></div>
-                </div>
-            </div>
-            <div class="flex items-center justify-between px-4 py-2 border-b border-[#1c1c1c] text-xs text-gray-400">
-                <button onclick="openMediaTray('public')">🖼️ Public</button>
-                <button onclick="openMediaTray('private')">🔒 Vault</button>
-                <div class="space-x-2"><button onclick="appendQuickEmoji('🔥')">🔥</button><button onclick="appendQuickEmoji('👑')">👑</button></div>
-            </div>
-            <div id="chatInputArea" class="p-3 flex items-center space-x-2">
-                <input type="text" id="messageInput" class="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm text-white">
-                <button onclick="sendMessage()" class="bg-[#8d0b0b] px-5 py-2.5 rounded-lg text-sm font-bold text-white">Send</button>
-            </div>
-        </div>
-    </div>
+            <button type="submit" class="w-full bg-[#8d0b0b] hover:bg-[#b00e0e] text-white text-xs uppercase font-bold tracking-widest py-3 rounded-lg transition-colors cursor-pointer mt-4">
+                Synchronize Identity
+            </button>
+        </form>
+    </div>
 
-    <script>
-        const SUPABASE_URL = "https://njonmqbsqfvmwowbgfeb.supabase.co"; 
-        const SUPABASE_ANON_KEY = "sb_publishable_u3_U6zXwc6UToJukPAkCPg_3ovi3yI9";
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <div id="chatModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-between max-w-md mx-auto">
+        
+        <header onclick="toggleTargetProfilePanel()" class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between shrink-0 cursor-pointer hover:bg-[#161616] transition-colors select-none">
+            <div class="flex items-center space-x-3">
+                <div id="chatTargetAvatar" class="w-8 h-8 rounded-full bg-gradient-to-br from-[#8d0b0b] to-[#222] flex items-center justify-center text-xs font-bold text-white uppercase overflow-hidden"></div>
+                <div>
+                    <div class="flex items-center space-x-1.5">
+                        <span id="chatTargetName" class="text-sm font-bold text-white">Chat</span>
+                        <span id="chatTargetAgeLocation" class="text-xs text-gray-400"></span>
+                        <span id="chatTargetBadge" class="text-[9px] font-bold tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1 py-0.2 rounded uppercase">Verified</span>
+                    </div>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-wider">Click header to review identity card</p>
+                </div>
+            </div>
+            <button onclick="event.stopPropagation(); closeChat();" class="text-gray-400 hover:text-white text-sm uppercase cursor-pointer">Close</button>
+        </header>
 
-        let currentUserProfile = null;
-        let activeTargetProfile = null; 
-        let messagingCapCount = 0;
-        let globalUnlockedTimestamps = {};
-        let activeTrayType = null;
+        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 text-sm flex flex-col justify-start min-h-0"></div>
+        
+        <div id="chatPaywall" class="hidden p-6 bg-[#121212] border-t border-[#8d0b0b] text-center space-y-4 shrink-0">
+            <p class="text-sm font-semibold text-white">Free Interaction Limit Achieved</p>
+            <button onclick="simulateUpgrade()" class="w-full bg-[#8d0b0b] text-white text-xs uppercase font-bold tracking-widest py-3 rounded-lg">Upgrade to Premium ($27/mo)</button>
+        </div>
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
-            await fetchUserProfile(session.user.id);
-            setInterval(updateChatSelfDestructTimers, 1000);
-        });
+        <div id="chatControlsContainer" class="bg-[#121212] border-t border-[#222] shrink-0">
+            
+            <div id="hybridMediaTray" class="hidden p-3 bg-[#171717] border-b border-[#252525] space-y-2">
+                <div class="flex justify-between items-center">
+                    <span id="trayTitle" class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Select Asset</span>
+                    <button onclick="closeMediaTray()" class="text-gray-500 hover:text-white text-xs">✕</button>
+                </div>
+                
+                <div class="flex items-center space-x-3 overflow-x-auto py-1">
+                    <div id="trayUploadButton" class="w-16 h-16 shrink-0 border border-dashed border-[#444] rounded-lg flex flex-col items-center justify-center bg-black/40 hover:bg-black cursor-pointer text-center p-1">
+                        <span class="text-sm">➕</span>
+                        <span class="text-[8px] uppercase text-gray-400 mt-1 font-semibold">Device</span>
+                    </div>
+                    <div id="trayPreuploadedPreview" class="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden border border-[#333] bg-black hidden cursor-pointer group"></div>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between px-4 py-2 border-b border-[#1c1c1c] text-xs text-gray-400 select-none">
+                <div class="flex items-center space-x-5">
+                    <button onclick="openMediaTray('public')" class="hover:text-white flex items-center space-x-1 cursor-pointer">
+                        <span>🖼️</span> <span class="font-medium tracking-wide">Public Pics</span>
+                    </button>
+                    <button onclick="openMediaTray('private')" class="hover:text-amber-500 flex items-center space-x-1 cursor-pointer">
+                        <span>🔒</span> <span class="font-medium tracking-wide">Private Vault</span>
+                    </button>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="appendQuickEmoji('🔥')" class="hover:scale-125 transition-transform cursor-pointer">🔥</button>
+                    <button onclick="appendQuickEmoji('👑')" class="hover:scale-125 transition-transform cursor-pointer">👑</button>
+                    <button onclick="appendQuickEmoji('❤️')" class="hover:scale-125 transition-transform cursor-pointer">❤️</button>
+                    <button onclick="appendQuickEmoji('✨')" class="hover:scale-125 transition-transform cursor-pointer">✨</button>
+                </div>
+            </div>
 
-        async function fetchUserProfile(uid) {
-            const { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
-            if (data) {
-                currentUserProfile = data;
-                messagingCapCount = data.message_count || 0;
-                renderStatusBanner();
-                renderMyProfilePreview();
-                loadMatchingFeed();
-            }
-        }
+            <div id="chatInputArea" class="p-3 flex items-center space-x-2">
+                <input type="text" id="messageInput" placeholder="Send typed desire..." class="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#8d0b0b]">
+                <button onclick="sendMessage()" class="bg-[#8d0b0b] hover:bg-[#a60d0d] px-5 py-2.5 rounded-lg text-sm font-bold uppercase text-white tracking-wider cursor-pointer transition-colors">Send</button>
+            </div>
+        </div>
+    </div>
 
-        function renderStatusBanner() {
-            const label = document.getElementById('statusLabel');
-            const btn = document.getElementById('upgradeBtn');
-            if (currentUserProfile.is_subscribed) {
-                label.innerText = "Verified Premium Elite";
-                label.className = "text-sm font-bold text-emerald-400";
-                btn.classList.add('hidden');
-            } else {
-                label.innerText = "Standard Member (Limited)";
-                label.className = "text-sm font-bold text-amber-500";
-                btn.classList.remove('
+    <input type="file" id="quickPublicFileInput" accept="image/*" class="hidden" onchange="handleQuickUpload(this, 'public')">
+    <input type="file" id="quickPrivateFileInput" accept="image/*,video/*" class="hidden" onchange="handleQuickUpload(this, 'private')">
+
+    <script>
+        const SUPABASE_URL = "https://njonmqbsqfvmwowbgfeb.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_u3_U6zXwc6UToJukPAkCPg_3ovi3yI9";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUserProfile = null;
+        let activeTargetProfile = null; 
+        let messagingCapCount = 0;
+        let globalUnlockedTimestamps = {};
+        let activeTrayType = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) { window.location.href = 'index.html'; return; }
+            await fetchUserProfile(session.user.id);
+            setInterval(updateChatSelfDestructTimers, 1000);
+        });
+
+        async function fetchUserProfile(uid) {
+            const { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
+            if (data) {
+                currentUserProfile = data;
+                messagingCapCount = data.message_count || 0;
+                renderStatusBanner();
+                populateProfileFields();
+                renderMyProfilePreview();
+                loadMatchingFeed();
+                if (!document.getElementById('hybridMediaTray').classList.contains('hidden')) {
+                    openMediaTray(activeTrayType);
+                }
+            }
+        }
+
+        function renderStatusBanner() {
+            const label = document.getElementById('statusLabel');
+            const btn = document.getElementById('upgradeBtn');
+            if (currentUserProfile.is_subscribed) {
+                label.innerText = "Verified Premium Elite";
+                label.className = "text-sm font-bold text-emerald-400";
+                btn.classList.add('hidden');
+            } else {
+                label.innerText = "Standard Member (Limited)";
+                label.className = "text-sm font-bold text-amber-500";
+                btn.classList.remove('hidden');
+            }
+        }
+
+        function renderMyProfilePreview() {
+            const container = document.getElementById('myProfileCardContainer');
+            if (!currentUserProfile) return;
+
+            let publicMedia = currentUserProfile.public_image 
+                ? `<img src="${currentUserProfile.public_image}" class="w-full h-full object-cover">
+                   <div class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center space-x-2 transition-opacity z-20">
+                       <button onclick="viewMedia('${currentUserProfile.public_image}', false)" class="bg-black/80 hover:bg-black px-2 py-1 rounded text-[10px] font-bold text-white uppercase">View</button>
+                       <button onclick="deleteMediaColumn('public_image')" class="bg-[#8d0b0b] hover:bg-red-700 px-2 py-1 rounded text-[10px] font-bold text-white uppercase">Delete</button>
+                   </div>`
+                : `<div class="w-full h-full bg-gradient-to-tr from-[#333] to-[#111] flex items-center justify-center text-[10px] text-gray-500">No Image Uploaded</div>`;
+            
+            let vaultMedia = '';
+            if (currentUserProfile.premium_vault_media) {
+                const isVideo = currentUserProfile.premium_vault_media.endsWith('.mp4');
+                let element = isVideo 
+                    ? `<video src="${currentUserProfile.premium_vault_media}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>`
+                    : `<img src="${currentUserProfile.premium_vault_media}" class="w-full h-full object-cover">`;
+
+                vaultMedia = `
+                    ${element}
+                    <div class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center space-x-2 transition-opacity z-20">
+                        <button onclick="viewMedia('${currentUserProfile.premium_vault_media}', ${isVideo})" class="bg-black/80 hover:bg-black px-2 py-1 rounded text-[10px] font-bold text-white uppercase">View</button>
+                        <button onclick="deleteMediaColumn('premium_vault_media')" class="bg-[#8d0b0b] hover:bg-red-700 px-2 py-1 rounded text-[10px] font-bold text-white uppercase">Delete</button>
+                    </div>`;
+            } else {
+                vaultMedia = `<div class="w-full h-full bg-gradient-to-tr from-[#222] to-[#0a0a0a] flex items-center justify-center text-[10px] text-gray-600">Vault Empty</div>`;
+            }
+
+            container.innerHTML = `
+                <div class="bg-[#161616] border border-[#333] rounded-xl p-4 space-y-4 opacity-90">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-sm font-bold text-[#8d0b0b]">${currentUserProfile.name || 'Set Your Name'}</span>
+                            <span class="text-xs text-gray-400 ml-2">${currentUserProfile.age || '??'} • ${currentUserProfile.city || 'Location'}</span>
+                        </div>
+                        <span class="text-[9px] uppercase tracking-widest bg-[#8d0b0b]/20 text-[#8d0b0b] border border-[#8d0b0b]/40 px-2 py-0.5 rounded font-bold">Your Live View</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 h-40">
+                        <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-[#222] relative group">
+                            <div class="absolute top-1.5 left-1.5 bg-black/70 text-[9px] uppercase px-1.5 py-0.5 rounded text-gray-300 z-10">Public Card</div>
+                            ${publicMedia}
+                        </div>
+                        <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-[#222] relative group">
+                            <div class="absolute top-1.5 left-1.5 bg-amber-600 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded text-black z-10">Premium Vault</div>
+                            ${vaultMedia}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function viewMedia(url, isVideo) {
+            const content = document.getElementById('lightboxContent');
+            content.innerHTML = isVideo 
+                ? `<video src="${url}" controls autoplay loop class="max-w-full max-h-[75vh] object-contain rounded"></video>`
+                : `<img src="${url}" class="max-w-full max-h-[75vh] object-contain rounded">`;
+            document.getElementById('lightboxModal').classList.remove('hidden');
+        }
+
+        function closeLightbox() { document.getElementById('lightboxModal').classList.add('hidden'); }
+
+        async function deleteMediaColumn(columnName) {
+            if (!confirm(`Permanently clear this asset?`)) return;
+            const payload = {}; payload[columnName] = null;
+            await _supabase.from('profiles').update(payload).eq('id', currentUserProfile.id);
+            await fetchUserProfile(currentUserProfile.id);
+        }
+
+        function openMediaTray(type) {
+            activeTrayType = type;
+            const tray = document.getElementById('hybridMediaTray');
+            const title = document.getElementById('trayTitle');
+            const previewBox = document.getElementById('trayPreuploadedPreview');
+            const uploadBtn = document.getElementById('trayUploadButton');
+
+            title.innerText = type === 'public' ? "🗂️ Public Gallery Assets" : "🔒 Vault Archive Assets";
+            
+            uploadBtn.onclick = () => {
+                if(type === 'public') document.getElementById('quickPublicFileInput').click();
+                if(type === 'private') document.getElementById('quickPrivateFileInput').click();
+            };
+
+            const activeAssetUrl = type === 'public' ? currentUserProfile.public_image : currentUserProfile.premium_vault_media;
+
+            if (activeAssetUrl) {
+                previewBox.classList.remove('hidden');
+                if (activeAssetUrl.endsWith('.mp4')) {
+                    previewBox.innerHTML = `<video src="${activeAssetUrl}" muted class="w-full h-full object-cover opacity-80"></video><div class="absolute inset-0 bg-black/40 flex items-center justify-center text-[9px] font-bold text-white">SEND</div>`;
+                } else {
+                    previewBox.innerHTML = `<img src="${activeAssetUrl}" class="w-full h-full object-cover opacity-80"><div class="absolute inset-0 bg-black/40 flex items-center justify-center text-[9px] font-bold text-white">SEND</div>`;
+                }
+                previewBox.onclick = () => sendMediaToChatStream(activeAssetUrl, activeAssetUrl.endsWith('.mp4'));
+            } else {
+                previewBox.classList.add('hidden');
+            }
+
+            tray.classList.remove('hidden');
+        }
+
+        function closeMediaTray() { document.getElementById('hybridMediaTray').classList.add('hidden'); }
+
+        // INCLUDED: Click execution inside stream launches full screen inspection instantly
+        function sendMediaToChatStream(url, isVideo) {
+            const msgContainer = document.getElementById('chatMessages');
+            const mediaBubble = document.createElement('div');
+            
+            mediaBubble.className = "rounded-xl border border-[#333] overflow-hidden max-w-[85%] self-end shrink-0 bg-[#161616] p-1.5 space-y-1 cursor-pointer hover:border-[#555] transition-colors";
+            mediaBubble.setAttribute('onclick', `viewMedia('${url}', ${isVideo})`);
+            
+            let element = isVideo 
+                ? `<video src="${url}" autoplay loop muted playsinline class="w-full h-40 object-cover rounded-md"></video>`
+                : `<img src="${url}" class="w-full h-40 object-cover rounded-md">`;
+                
+            mediaBubble.innerHTML = `
+                <div class="flex justify-between items-center px-1">
+                    <span class="text-[7px] text-gray-400 font-mono uppercase tracking-wider">🔍 Tap to expand</span>
+                    <p class="text-[8px] text-gray-500 uppercase tracking-widest text-right">${activeTrayType === 'public' ? 'Public Portfolio Asset' : '👑 Locked Vault Stream'}</p>
+                </div>
+                ${element}
+            `;
+            
+            msgContainer.appendChild(mediaBubble);
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+            closeMediaTray();
+        }
+
+        async function handleQuickUpload(inputElement, type) {
+            const file = inputElement.files[0];
+            if (!file) return;
+
+            let fileUrl = '';
+            if (type === 'public') {
+                const compressed = await compressImage(file);
+                const path = `${currentUserProfile.id}/public_${Date.now()}.jpg`;
+                const { error } = await _supabase.storage.from('gallery').upload(path, compressed, { upsert: true });
+                if (!error) fileUrl = `${SUPABASE_URL}/storage/v1/object/public/gallery/${path}`;
+                if (fileUrl) await _supabase.from('profiles').update({ public_image: fileUrl }).eq('id', currentUserProfile.id);
+            } else {
+                let assetToUpload = file;
+                const ext = file.type.startsWith('video/') ? 'mp4' : 'jpg';
+                if (file.type.startsWith('video/')) {
+                    const isValid = await validateVideoDuration(file);
+                    if (!isValid) { alert("Premium videos must remain strictly under 15 seconds."); return; }
+                } else {
+                    assetToUpload = await compressImage(file);
+                }
+                const path = `${currentUserProfile.id}/premium_${Date.now()}.${ext}`;
+                const { error } = await _supabase.storage.from('gallery').upload(path, assetToUpload, { upsert: true });
+                if (!error) fileUrl = `${SUPABASE_URL}/storage/v1/object/public/gallery/${path}`;
+                if (fileUrl) await _supabase.from('profiles').update({ premium_vault_media: fileUrl }).eq('id', currentUserProfile.id);
+            }
+
+            await fetchUserProfile(currentUserProfile.id);
+            if (fileUrl) sendMediaToChatStream(fileUrl, file.type.startsWith('video/'));
+        }
+
+        // INCLUDED: Tap target functionality linked into the incoming static data rows inside messages interface
+        function renderChatMessages(targetId, premiumVaultMedia) {
+            const msgContainer = document.getElementById('chatMessages');
+            const isSubscribed = currentUserProfile.is_subscribed;
+            const unlockTime = globalUnlockedTimestamps[targetId];
+            let ppvPayloadHTML = '';
+
+            if (!premiumVaultMedia) {
+                ppvPayloadHTML = `<p class="text-[11px] text-gray-600 italic">No premium assets deployed to vault.</p>`;
+            } else if (!isSubscribed) {
+                ppvPayloadHTML = `
+                    <div class="w-full h-36 bg-[#111] rounded-lg relative overflow-hidden flex flex-col items-center justify-center p-4 text-center border border-[#311]">
+                        <span class="text-[10px] text-amber-500 font-bold uppercase tracking-widest mb-1">👑 Encrypted PPV Message Stream</span>
+                        <button onclick="unlockPPVStream('${targetId}')" class="bg-[#8d0b0b] text-[9px] text-white font-bold uppercase px-3 py-1 rounded cursor-pointer">Unlock Premium Platform ($27)</button>
+                    </div>`;
+            } else {
+                const timeElapsed = unlockTime ? (Date.now() - unlockTime) : 0;
+                const sixtyMinutes = 60 * 60 * 1000;
+
+                if (unlockTime && timeElapsed >= sixtyMinutes) {
+                    ppvPayloadHTML = `
+                        <div class="w-full p-3 bg-[#161414] border border-[#222] rounded-lg text-center">
+                            <p class="text-[10px] uppercase tracking-wider text-gray-500 font-bold">🔒 Asset Destroyed from Chat View</p>
+                        </div>`;
+                } else {
+                    const isVideo = premiumVaultMedia.includes('.mp4');
+                    let assetElement = isVideo 
+                        ? `<video src="${premiumVaultMedia}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>`
+                        : `<img src="${premiumVaultMedia}" class="w-full h-full object-cover">`;
+
+                    ppvPayloadHTML = `
+                        <div class="w-full bg-[#141414] border border-[#8d0b0b]/40 rounded-lg p-2 space-y-2 shrink-0 cursor-pointer hover:border-amber-500/50 transition-colors" onclick="viewMedia('${premiumVaultMedia}', ${isVideo})">
+                            <div class="flex justify-between items-center text-[9px] text-gray-400">
+                                <span class="text-amber-500 font-bold uppercase flex items-center space-x-1"><span>⚡</span> <span>Unlocked Premium Stream (Tap View)</span></span>
+                                <span id="countdownTicker" data-target-id="${targetId}" class="bg-black/60 px-1.5 py-0.5 rounded border border-[#333] font-mono text-red-500">60:00</span>
+                            </div>
+                            <div class="w-full h-44 bg-black rounded-md overflow-hidden relative">
+                                ${assetElement}
+                            </div>
+                        </div>`;
+                }
+            }
+
+            msgContainer.innerHTML = `
+                <div class="text-center text-gray-600 text-xs py-2 italic shrink-0 w-full">Connection secure & end-to-end encrypted.</div>
+                <div class="bg-[#1a1a1a] border border-[#222] rounded-lg p-3 text-gray-300 max-w-[85%] shrink-0 self-start">
+                    Hello there! I've loaded my public media and hidden portfolio vault streams onto my interface module. 
+                </div>
+                <div class="w-full max-w-[85%] self-start mt-1">${ppvPayloadHTML}</div>
+            `;
+            checkChatPermissions();
+        }
+
+        function unlockPPVStream(targetId) {
+            globalUnlockedTimestamps[targetId] = Date.now(); simulateUpgrade();
+        }
+
+        function updateChatSelfDestructTimers() {
+            const tickers = document.querySelectorAll('#countdownTicker');
+            tickers.forEach(ticker => {
+                const targetId = ticker.getAttribute('data-target-id');
+                const startTimestamp = globalUnlockedTimestamps[targetId]; if (!startTimestamp) return;
+                const remaining = (60 * 60 * 1000) - (Date.now() - startTimestamp);
+
+                if (remaining <= 0) {
+                    if (!document.getElementById('chatModal').classList.contains('hidden')) {
+                        renderChatMessages(targetId, activeTargetProfile.premium_vault_media);
+                    }
+                } else {
+                    const m = Math.floor(remaining / 60000); const s = Math.floor((remaining % 60000) / 1000);
+                    ticker.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                }
+            });
+        }
+
+        function checkChatPermissions() {
+            const isSubscribed = currentUserProfile.is_subscribed;
+            document.getElementById('chatControlsContainer').classList.toggle('hidden', !isSubscribed && messagingCapCount >= 10);
+            document.getElementById('chatPaywall').classList.toggle('hidden', isSubscribed || messagingCapCount < 10);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput'); if (!input.value.trim()) return;
+            const msgContainer = document.getElementById('chatMessages');
+            const userMsg = document.createElement('div');
+            userMsg.className = "bg-[#8d0b0b] text-white rounded-lg p-3 max-w-[85%] shrink-0 self-end text-right font-medium";
+            userMsg.innerText = input.value; msgContainer.appendChild(userMsg);
+            
+            input.value = ''; msgContainer.scrollTop = msgContainer.scrollHeight; messagingCapCount++;
+            if (!currentUserProfile.is_subscribed) {
+                await _supabase.from('profiles').update({ message_count: messagingCapCount }).eq('id', currentUserProfile.id);
+                if (messagingCapCount >= 10) setTimeout(checkChatPermissions, 500);
+            }
+        }
+
+        function toggleTargetProfilePanel() {
+            const panel = document.getElementById('targetProfilePanel');
+            if (!activeTargetProfile) return;
+
+            if (panel.classList.contains('hidden')) {
+                let publicMedia = activeTargetProfile.public_image ? `<img src="${activeTargetProfile.public_image}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-[#222]"></div>`;
+                let vaultMedia = activeTargetProfile.premium_vault_media ? `<img src="${activeTargetProfile.premium_vault_media}" class="w-full h-full object-cover blur-xl opacity-40">` : `<div class="w-full h-full bg-[#111]"></div>`;
+
+                document.getElementById('targetPanelContent').innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-[#8d0b0b]">${activeTargetProfile.name} • Portfolio</h3>
+                            <span class="text-[10px] text-gray-400">${activeTargetProfile.age} Years • ${activeTargetProfile.city}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 h-28">
+                            <div class="rounded overflow-hidden border border-
