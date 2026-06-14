@@ -1,99 +1,149 @@
-<div class="rounded-lg overflow-hidden border border-[#333]">${publicMedia}</div>
-                            <div class="rounded-lg overflow-hidden border border-[#333] relative">
-                                ${vaultMedia}
-                                <div class="absolute inset-0 flex items-center justify-center"><span class="text-[9px] font-bold text-white uppercase tracking-widest bg-black/50 px-2 py-1 rounded">Locked</span></div>
-                            </div>
-                        </div>
-                        <p class="text-[10px] text-gray-500 italic">Desires: ${activeTargetProfile.desires || 'No tags set.'}</p>
-                    </div>
-                `;
-                panel.classList.remove('hidden');
-            } else {
-                panel.classList.add('hidden');
-            }
-        }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Erosia — Sanctuary</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #0a0a0a; color: #ffffff; font-family: system-ui, sans-serif; }
+        #chatMessages::-webkit-scrollbar { display: none; }
+        #chatMessages { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen bg-[#0a0a0a]">
 
-        async function populateProfileFields() {
-            document.getElementById('profileName').value = currentUserProfile.name || '';
-            document.getElementById('profileAge').value = currentUserProfile.age || '';
-            document.getElementById('profileCity').value = currentUserProfile.city || '';
-            document.getElementById('profileDesires').value = currentUserProfile.desires || '';
-        }
+    <header class="w-full bg-[#121212] border-b border-[#222] p-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="text-sm tracking-[0.3em] text-[#8d0b0b] font-bold uppercase">L'Erosia</div>
+        <div class="flex items-center space-x-4">
+            <button onclick="toggleProfileModal(true)" class="text-xs uppercase tracking-wider text-gray-300 hover:text-[#8d0b0b] cursor-pointer transition-colors">Edit Profile</button>
+            <button id="logoutBtn" class="text-xs uppercase tracking-wider text-gray-400 hover:text-white cursor-pointer">Exit</button>
+        </div>
+    </header>
 
-        document.getElementById('profileForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const updates = {
-                name: document.getElementById('profileName').value,
-                age: parseInt(document.getElementById('profileAge').value),
-                city: document.getElementById('profileCity').value,
-                desires: document.getElementById('profileDesires').value
-            };
-            await _supabase.from('profiles').update(updates).eq('id', currentUserProfile.id);
-            toggleProfileModal(false);
-            fetchUserProfile(currentUserProfile.id);
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 space-y-6 pb-24">
+        <div id="tierStatus" class="bg-[#121212] border border-[#222] rounded-xl p-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs text-gray-400 uppercase tracking-wider">Account Status</p>
+                <p id="statusLabel" class="text-sm font-bold text-gray-300">Evaluating Profile...</p>
+            </div>
+            <button id="upgradeBtn" class="hidden bg-[#8d0b0b] hover:bg-[#b00e0e] text-white text-xs uppercase font-bold tracking-widest px-4 py-2 rounded transition-colors cursor-pointer">
+                Unlock ($27)
+            </button>
+        </div>
+
+        <div class="space-y-3">
+            <h2 class="text-xs uppercase tracking-[0.2em] text-gray-400 font-semibold">Your Presentation Identity</h2>
+            <div id="myProfileCardContainer">
+                <p class="text-xs text-gray-600 text-center py-4 italic">Rendering presentation card...</p>
+            </div>
+        </div>
+
+        <hr class="border-[#222]">
+
+        <div class="space-y-3">
+            <h2 class="text-xs uppercase tracking-[0.2em] text-[#8d0b0b] font-semibold">Matched Desires</h2>
+            <div id="matchesFeed" class="space-y-4">
+                <p class="text-sm text-gray-500 text-center py-8">Scanning European sectors for profiles...</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="lightboxModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-center items-center p-4">
+        <button onclick="closeLightbox()" class="absolute top-4 right-4 text-xs font-bold tracking-widest text-gray-400 hover:text-white uppercase bg-[#111] px-4 py-2 rounded-lg border border-[#333]">Close View</button>
+        <div id="lightboxContent" class="max-w-full max-h-[80vh] flex items-center justify-center rounded-lg overflow-hidden"></div>
+    </div>
+
+    <div id="targetProfilePanel" class="fixed inset-x-0 top-[73px] max-w-md mx-auto bg-[#121212] border-b border-[#333] shadow-2xl p-4 hidden z-40 transition-all">
+        <div id="targetPanelContent"></div>
+    </div>
+
+    <div id="profileModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col max-w-md mx-auto overflow-y-auto">
+        <header class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between sticky top-0">
+            <span class="text-sm font-medium uppercase tracking-wider text-gray-200">Customize Identity</span>
+            <button onclick="toggleProfileModal(false)" class="text-gray-400 hover:text-white text-sm uppercase cursor-pointer">Close</button>
+        </header>
+        <form id="profileForm" class="p-6 space-y-5">
+            <input type="text" id="profileName" placeholder="Display Name" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm text-white">
+            <div class="grid grid-cols-2 gap-4">
+                <input type="number" id="profileAge" placeholder="Age" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm text-white">
+                <input type="text" id="profileCity" placeholder="City" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm text-white">
+            </div>
+            <input type="text" id="profileDesires" placeholder="Core Desires" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm text-white">
+            <button type="submit" class="w-full bg-[#8d0b0b] p-3 rounded-lg text-xs font-bold uppercase text-white">Synchronize Identity</button>
+        </form>
+    </div>
+
+    <div id="chatModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-between max-w-md mx-auto">
+        <header onclick="toggleTargetProfilePanel()" class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between shrink-0 cursor-pointer">
+            <span id="chatTargetName" class="text-sm font-bold text-white">Chat</span>
+            <button onclick="event.stopPropagation(); closeChat();" class="text-gray-400 text-sm uppercase">Close</button>
+        </header>
+        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3"></div>
+        <div id="chatPaywall" class="hidden p-6 bg-[#121212] border-t border-[#8d0b0b] text-center">
+            <button onclick="simulateUpgrade()" class="w-full bg-[#8d0b0b] text-white text-xs font-bold p-3 rounded-lg">Upgrade to Premium ($27)</button>
+        </div>
+        <div id="chatControlsContainer" class="bg-[#121212] border-t border-[#222]">
+            <div id="hybridMediaTray" class="hidden p-3 bg-[#171717] border-b border-[#252525]">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="trayTitle" class="text-[10px] text-gray-400 uppercase">Select Asset</span>
+                    <button onclick="closeMediaTray()" class="text-gray-500">✕</button>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div id="trayUploadButton" class="w-16 h-16 border border-dashed border-[#444] rounded-lg flex items-center justify-center cursor-pointer">➕</div>
+                    <div id="trayPreuploadedPreview" class="relative w-16 h-16 rounded-lg overflow-hidden border border-[#333] hidden"></div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between px-4 py-2 border-b border-[#1c1c1c] text-xs text-gray-400">
+                <button onclick="openMediaTray('public')">🖼️ Public</button>
+                <button onclick="openMediaTray('private')">🔒 Vault</button>
+                <div class="space-x-2"><button onclick="appendQuickEmoji('🔥')">🔥</button><button onclick="appendQuickEmoji('👑')">👑</button></div>
+            </div>
+            <div id="chatInputArea" class="p-3 flex items-center space-x-2">
+                <input type="text" id="messageInput" class="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm text-white">
+                <button onclick="sendMessage()" class="bg-[#8d0b0b] px-5 py-2.5 rounded-lg text-sm font-bold text-white">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://njonmqbsqfvmwowbgfeb.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_u3_U6zXwc6UToJukPAkCPg_3ovi3yI9";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUserProfile = null;
+        let activeTargetProfile = null; 
+        let messagingCapCount = 0;
+        let globalUnlockedTimestamps = {};
+        let activeTrayType = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) { window.location.href = 'index.html'; return; }
+            await fetchUserProfile(session.user.id);
+            setInterval(updateChatSelfDestructTimers, 1000);
         });
 
-        function toggleProfileModal(show) { document.getElementById('profileModal').classList.toggle('hidden', !show); }
-        function closeChat() { document.getElementById('chatModal').classList.add('hidden'); }
-        function appendQuickEmoji(e) { document.getElementById('messageInput').value += e; }
-        function simulateUpgrade() { alert("Redirecting to secure gateway for L'Erosia Premium ($27)..."); }
-
-        async function compressImage(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800;
-                        const scale = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scale;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.7);
-                    };
-                };
-            });
-        }
-
-        async function validateVideoDuration(file) {
-            return new Promise((resolve) => {
-                const video = document.createElement('video');
-                video.preload = 'metadata';
-                video.onloadedmetadata = () => {
-                    window.URL.revokeObjectURL(video.src);
-                    resolve(video.duration <= 15.5);
-                };
-                video.src = URL.createObjectURL(file);
-            });
-        }
-
-        document.getElementById('logoutBtn').onclick = () => { _supabase.auth.signOut(); window.location.href = 'index.html'; };
-
-        async function loadMatchingFeed() {
-            const { data } = await _supabase.from('profiles').select('*').neq('id', currentUserProfile.id).limit(5);
-            const feed = document.getElementById('matchesFeed');
-            if (data && data.length > 0) {
-                feed.innerHTML = data.map(p => `
-                    <div class="flex items-center justify-between bg-[#121212] p-3 rounded-lg border border-[#222]">
-                        <span class="text-sm text-gray-300 font-bold">${p.name}</span>
-                        <button onclick="openChatWith('${p.id}')" class="text-[10px] uppercase font-bold text-[#8d0b0b] hover:text-white cursor-pointer">View Desire</button>
-                    </div>
-                `).join('');
+        async function fetchUserProfile(uid) {
+            const { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
+            if (data) {
+                currentUserProfile = data;
+                messagingCapCount = data.message_count || 0;
+                renderStatusBanner();
+                renderMyProfilePreview();
+                loadMatchingFeed();
             }
         }
 
-        async function openChatWith(id) {
-            const { data } = await _supabase.from('profiles').select('*').eq('id', id).single();
-            activeTargetProfile = data;
-            document.getElementById('chatTargetName').innerText = data.name;
-            document.getElementById('chatTargetAgeLocation').innerText = `${data.age} • ${data.city}`;
-            renderChatMessages(data.id, data.premium_vault_media);
-            document.getElementById('chatModal').classList.remove('hidden');
-        }
-    </script>
-</body>
-</html>
+        function renderStatusBanner() {
+            const label = document.getElementById('statusLabel');
+            const btn = document.getElementById('upgradeBtn');
+            if (currentUserProfile.is_subscribed) {
+                label.innerText = "Verified Premium Elite";
+                label.className = "text-sm font-bold text-emerald-400";
+                btn.classList.add('hidden');
+            } else {
+                label.innerText = "Standard Member (Limited)";
+                label.className = "text-sm font-bold text-amber-500";
+                btn.classList.remove('
