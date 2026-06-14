@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L'Erosia — Sanctuary</title>
-    <!-- Tailwind CSS Engine -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Supabase Core Engine -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #0a0a0a; color: #ffffff; font-family: system-ui, sans-serif; }
@@ -46,10 +44,9 @@
                 <p class="text-sm text-gray-500 text-center py-8">Scanning European sectors for profiles...</p>
             </div>
         </div>
-
     </main>
 
-    <!-- Profile Management Panel Modal -->
+    <!-- Profile Management Panel Modal (Upgraded from image_1c0100.png) -->
     <div id="profileModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col max-w-md mx-auto overflow-y-auto">
         <header class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between sticky top-0">
             <span class="text-sm font-medium uppercase tracking-wider text-gray-200">Customize Identity</span>
@@ -73,21 +70,20 @@
             </div>
             <div>
                 <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">Core Desires / Tags</label>
-                <input type="text" id="profileDesires" placeholder="e.g. Luxury Matchmaking, Exclusive Dating" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm focus:outline-none focus:border-[#8d0b0b] text-white">
+                <input type="text" id="profileDesires" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm focus:outline-none focus:border-[#8d0b0b] text-white">
             </div>
             
             <div class="border-t border-[#222] pt-4 space-y-4">
                 <label class="block text-[10px] uppercase tracking-widest text-[#8d0b0b] font-bold">Media Portfolio Settings</label>
                 
                 <div>
-                    <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">1. Public Showcase Image URL (Visible to Everyone)</label>
-                    <input type="url" id="publicImage" placeholder="https://example.com/free-preview.png" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#8d0b0b] text-white">
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">1. Public Gallery Image</label>
+                    <input type="file" id="publicImageFile" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#1a1a1a] file:text-white file:hover:bg-[#252525] cursor-pointer">
                 </div>
                 
                 <div>
-                    <label class="block text-[10px] uppercase tracking-widest text-amber-500 mb-1">2. Premium PPV Vault Media URL (Locked behind $27 Paywall)</label>
-                    <input type="url" id="premiumVaultMedia" placeholder="https://example.com/locked-content.mp4" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#8d0b0b] text-white">
-                    <p class="text-[10px] text-gray-500 mt-1">Accepts high-fidelity image or video stream hotlinks.</p>
+                    <label class="block text-[10px] uppercase tracking-widest text-amber-500 mb-1">2. Premium PPV Vault Media (Max 15s Video or Image)</label>
+                    <input type="file" id="premiumVaultFile" accept="image/*,video/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#1a1a1a] file:text-amber-500 file:hover:bg-[#252525] cursor-pointer">
                 </div>
             </div>
 
@@ -118,7 +114,6 @@
         </div>
     </div>
 
-    <!-- Scripting Engine Engine -->
     <script>
         const SUPABASE_URL = "https://njonmqbsqfvmwowbgfeb.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable_u3_U6zXwc6UToJukPAkCPg_3ovi3yI9";
@@ -126,18 +121,20 @@
 
         let currentUserProfile = null;
         let messagingCapCount = 0;
+        let activeCountdownInterval = null;
+        let globalUnlockedTimestamps = {}; // Tracks PPV view timestamps per target user
 
         window.addEventListener('DOMContentLoaded', async () => {
             const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) {
-                window.location.href = 'index.html';
-                return;
-            }
+            if (!session) { window.location.href = 'index.html'; return; }
             await fetchUserProfile(session.user.id);
+            
+            // Kick off global clock engine to compute self-destruction frames every second
+            setInterval(updateChatSelfDestructTimers, 1000);
         });
 
         async function fetchUserProfile(uid) {
-            const { data, error } = await _supabase.from('profiles').select('*').eq('id', uid).single();
+            const { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
             if (data) {
                 currentUserProfile = data;
                 messagingCapCount = data.message_count || 0;
@@ -167,16 +164,79 @@
             document.getElementById('profileAge').value = currentUserProfile.age || '';
             document.getElementById('profileCity').value = currentUserProfile.city || '';
             document.getElementById('profileDesires').value = currentUserProfile.desires ? currentUserProfile.desires.join(', ') : '';
-            document.getElementById('publicImage').value = currentUserProfile.public_image || '';
-            document.getElementById('premiumVaultMedia').value = currentUserProfile.premium_vault_media || '';
         }
 
-        function toggleProfileModal(show) {
-            document.getElementById('profileModal').classList.toggle('hidden', !show);
+        function toggleProfileModal(show) { document.getElementById('profileModal').classList.toggle('hidden', !show); }
+
+        // Local downscaling compressor for images
+        async function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.7);
+                    };
+                };
+            });
+        }
+
+        // Strict validation engine for video assets under 15 seconds
+        async function validateVideoDuration(file) {
+            return new Promise((resolve) => {
+                const video = document.createElement('video');
+                video.preload = 'metadata';
+                video.src = URL.createObjectURL(file);
+                video.onloadedmetadata = () => {
+                    URL.revokeObjectURL(video.src);
+                    resolve(video.duration <= 15);
+                };
+            });
         }
 
         document.getElementById('profileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            let publicUrl = currentUserProfile.public_image;
+            let premiumUrl = currentUserProfile.premium_vault_media;
+
+            const publicFile = document.getElementById('publicImageFile').files[0];
+            const premiumFile = document.getElementById('premiumVaultFile').files[0];
+
+            // 1. Optimize and Upload Public File
+            if (publicFile) {
+                const compressed = await compressImage(publicFile);
+                const filePath = `${currentUserProfile.id}/public_${Date.now()}.jpg`;
+                const { error } = await _supabase.storage.from('gallery').upload(filePath, compressed, { upsert: true });
+                if (!error) publicUrl = `${SUPABASE_URL}/storage/v1/object/public/gallery/${filePath}`;
+            }
+
+            // 2. Validate and Upload Premium PPV Asset
+            if (premiumFile) {
+                let assetToUpload = premiumFile;
+                if (premiumFile.type.startsWith('video/')) {
+                    const isValid = await validateVideoDuration(premiumFile);
+                    if (!isValid) { alert("Premium videos must remain strictly under 15 seconds to stream inside the workspace."); return; }
+                } else if (premiumFile.type.startsWith('image/')) {
+                    assetToUpload = await compressImage(premiumFile);
+                }
+                
+                const ext = premiumFile.type.startsWith('video/') ? 'mp4' : 'jpg';
+                const filePath = `${currentUserProfile.id}/premium_${Date.now()}.${ext}`;
+                const { error } = await _supabase.storage.from('gallery').upload(filePath, assetToUpload, { upsert: true });
+                if (!error) premiumUrl = `${SUPABASE_URL}/storage/v1/object/public/gallery/${filePath}`;
+            }
+
             const rawDesires = document.getElementById('profileDesires').value;
             const desiresArray = rawDesires.split(',').map(item => item.trim()).filter(item => item !== '');
 
@@ -185,66 +245,24 @@
                 age: parseInt(document.getElementById('profileAge').value),
                 city: document.getElementById('profileCity').value.trim(),
                 desires: desiresArray,
-                public_image: document.getElementById('publicImage').value.trim(),
-                premium_vault_media: document.getElementById('premiumVaultMedia').value.trim()
+                public_image: publicUrl,
+                premium_vault_media: premiumUrl
             };
 
             const { error } = await _supabase.from('profiles').update(updates).eq('id', currentUserProfile.id);
-            if (error) {
-                alert(`Sync Failed: ${error.message}`);
-            } else {
-                alert('Identity synced successfully!');
-                toggleProfileModal(false);
-                await fetchUserProfile(currentUserProfile.id);
-            }
+            if (error) { alert(`Sync Failed: ${error.message}`); } 
+            else { alert('Identity synced successfully!'); toggleProfileModal(false); await fetchUserProfile(currentUserProfile.id); }
         });
 
         async function loadMatchingFeed() {
-            const { data: matches } = await _supabase.from('profiles')
-                .select('*')
-                .neq('id', currentUserProfile.id)
-                .limit(10);
-
+            const { data: matches } = await _supabase.from('profiles').select('*').neq('id', currentUserProfile.id).limit(10);
             const feed = document.getElementById('matchesFeed');
             feed.innerHTML = '';
-
-            if (!matches || matches.length === 0) {
-                feed.innerHTML = '<p class="text-xs text-gray-500 text-center py-8">Awaiting new profiles...</p>';
-                return;
-            }
+            if (!matches || matches.length === 0) { feed.innerHTML = '<p class="text-xs text-gray-500 text-center py-8">Awaiting profiles...</p>'; return; }
 
             matches.forEach(profile => {
-                const isPremiumUser = currentUserProfile.is_subscribed;
-                
-                // 1. Render Public Image (Visible to all users)
-                let publicMedia = `<div class="w-full h-full bg-gradient-to-tr from-[#200] to-[#111]"></div>`;
-                if (profile.public_image) {
-                    publicMedia = `<img src="${profile.public_image}" class="w-full h-full object-cover">`;
-                }
-
-                // 2. Render Premium Vault Content (Conditional paywall logic)
-                let vaultMedia = '';
-                if (isPremiumUser) {
-                    if (profile.premium_vault_media && profile.premium_vault_media.endsWith('.mp4')) {
-                        vaultMedia = `<video src="${profile.premium_vault_media}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>`;
-                    } else if (profile.premium_vault_media) {
-                        vaultMedia = `<img src="${profile.premium_vault_media}" class="w-full h-full object-cover">`;
-                    } else {
-                        vaultMedia = `<div class="w-full h-full bg-[#1f1a1a] flex items-center justify-center text-xs text-gray-500">Vault Empty</div>`;
-                    }
-                } else {
-                    // Locked state for standard accounts
-                    vaultMedia = `
-                        <div class="w-full h-full bg-[#111] relative flex items-center justify-center border border-[#311]">
-                            ${profile.premium_vault_media ? `<img src="${profile.premium_vault_media}" class="absolute inset-0 w-full h-full object-cover blur-xl opacity-30">` : ''}
-                            <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4 text-center z-10">
-                                <span class="text-[10px] text-amber-500 font-bold tracking-widest uppercase mb-1">👑 Pay-Per-View Premium Vault</span>
-                                <p class="text-[10px] text-gray-400 max-w-[80%] mb-2">Unlock details to expose private portfolio assets</p>
-                                <button onclick="simulateUpgrade()" class="bg-[#8d0b0b] text-[9px] text-white font-bold uppercase tracking-wider px-2.5 py-1 rounded">Unlock Vault</button>
-                            </div>
-                        </div>
-                    `;
-                }
+                let publicMedia = profile.public_image ? `<img src="${profile.public_image}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-gradient-to-tr from-[#200] to-[#111]"></div>`;
+                let vaultMedia = profile.premium_vault_media ? `<img src="${profile.premium_vault_media}" class="w-full h-full object-cover blur-xl opacity-30">` : `<div class="w-full h-full bg-[#111]"></div>`;
 
                 const card = document.createElement('div');
                 card.className = "bg-[#121212] border border-[#222] rounded-xl p-4 space-y-4";
@@ -254,45 +272,123 @@
                             <span class="text-sm font-semibold text-white">${profile.name || 'Anonymous Member'}</span>
                             <span class="text-xs text-gray-400 ml-2">${profile.age || '??'} • ${profile.city || 'Europe'}</span>
                         </div>
-                        <span class="text-[10px] uppercase tracking-widest bg-black text-[#8d0b0b] border border-[#333] px-2 py-0.5 rounded">Verified</span>
                     </div>
-                    
-                    <!-- Split Media Structure: Public Gallery vs Premium PPV Vault -->
                     <div class="grid grid-cols-2 gap-3 h-40">
                         <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-[#222] relative">
-                            <div class="absolute top-1.5 left-1.5 bg-black/70 text-[9px] tracking-wider uppercase px-1.5 py-0.5 rounded text-gray-300 z-10">Public</div>
+                            <div class="absolute top-1.5 left-1.5 bg-black/70 text-[9px] uppercase px-1.5 py-0.5 rounded text-gray-300 z-10">Public Gallery</div>
                             ${publicMedia}
                         </div>
-                        <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-[#222] relative">
-                            <div class="absolute top-1.5 left-1.5 bg-[#8d0b0b] text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded text-white z-20">Vault</div>
+                        <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-[#222] relative flex items-center justify-center">
+                            <div class="absolute top-1.5 left-1.5 bg-[#8d0b0b] text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded text-white z-10">Vault Archive</div>
                             ${vaultMedia}
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center text-center p-2">
+                                <span class="text-[9px] tracking-wider text-gray-400 font-bold uppercase">Stored in Vault</span>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="flex flex-wrap gap-1">
-                        ${profile.desires ? profile.desires.map(d => `<span class="text-[10px] bg-[#1a1a1a] px-2 py-1 rounded text-gray-400 border border-[#222]">${d}</span>`).join('') : ''}
-                    </div>
-
-                    <button onclick="openChat('${profile.id}', '${profile.name || 'User'}')" class="w-full bg-[#161616] hover:bg-[#222] text-gray-300 hover:text-white border border-[#222] text-xs uppercase tracking-widest py-2 rounded transition-colors font-medium cursor-pointer">
-                        Initiate Connection
+                    <button onclick="openChat('${profile.id}', '${profile.name || 'User'}', '${profile.premium_vault_media}')" class="w-full bg-[#161616] hover:bg-[#222] text-gray-300 text-xs uppercase tracking-widest py-2 rounded font-medium cursor-pointer">
+                        Open Connection Chat
                     </button>
                 `;
                 feed.appendChild(card);
             });
         }
 
-        function openChat(targetId, targetName) {
+        function openChat(targetId, targetName, premiumVaultMedia) {
             document.getElementById('chatTargetName').innerText = targetName;
             document.getElementById('chatModal').classList.remove('hidden');
+            renderChatMessages(targetId, premiumVaultMedia);
+        }
+
+        function renderChatMessages(targetId, premiumVaultMedia) {
             const msgContainer = document.getElementById('chatMessages');
+            const isSubscribed = currentUserProfile.is_subscribed;
+            const unlockTime = globalUnlockedTimestamps[targetId];
+            
+            let ppvPayloadHTML = '';
+
+            if (!premiumVaultMedia) {
+                ppvPayloadHTML = `<p class="text-[11px] text-gray-600 italic">No premium assets deployed to vault.</p>`;
+            } else if (!isSubscribed) {
+                // Completely blurred locked states for non-paying tiers
+                ppvPayloadHTML = `
+                    <div class="w-full h-36 bg-[#111] rounded-lg relative overflow-hidden flex flex-col items-center justify-center p-4 text-center border border-[#311]">
+                        <span class="text-[10px] text-amber-500 font-bold uppercase tracking-widest mb-1">👑 Encrypted PPV Message Stream</span>
+                        <p class="text-[10px] text-gray-400 mb-2">Upgrade to deploy instant unblur decryption privileges.</p>
+                        <button onclick="unlockPPVStream('${targetId}')" class="bg-[#8d0b0b] text-[9px] text-white font-bold uppercase px-3 py-1 rounded">Unlock Premium Platform ($27)</button>
+                    </div>`;
+            } else {
+                // If unlocked, run the expiration evaluation
+                const timeElapsed = unlockTime ? (Date.now() - unlockTime) : 0;
+                const sixtyMinutes = 60 * 60 * 1000;
+
+                if (unlockTime && timeElapsed >= sixtyMinutes) {
+                    ppvPayloadHTML = `
+                        <div class="w-full p-3 bg-[#161414] border border-[#222] rounded-lg text-center">
+                            <p class="text-[10px] uppercase tracking-wider text-gray-500 font-bold">🔒 Asset Destroyed from Chat View</p>
+                            <p class="text-[9px] text-gray-600">The 60-minute view duration threshold expired. Content safely retained inside their main model vault profile.</p>
+                        </div>`;
+                } else {
+                    // Visible state with clean tickers embedded
+                    let assetElement = premiumVaultMedia.includes('.mp4') 
+                        ? `<video src="${premiumVaultMedia}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>`
+                        : `<img src="${premiumVaultMedia}" class="w-full h-full object-cover">`;
+
+                    ppvPayloadHTML = `
+                        <div class="w-full bg-[#141414] border border-[#8d0b0b]/40 rounded-lg p-2 space-y-2 shrink-0">
+                            <div class="flex justify-between items-center text-[9px] text-gray-400">
+                                <span class="text-amber-500 font-bold uppercase">⚡ Unlocked Premium Stream</span>
+                                <span id="countdownTicker" data-target-id="${targetId}" class="bg-black/60 px-1.5 py-0.5 rounded border border-[#333] font-mono text-red-500">60:00</span>
+                            </div>
+                            <div class="w-full h-44 bg-black rounded-md overflow-hidden relative">
+                                ${assetElement}
+                            </div>
+                        </div>`;
+                }
+            }
+
             msgContainer.innerHTML = `
-                <div class="text-center text-gray-600 text-xs py-4 italic shrink-0 w-full">Secure connection route initialized.</div>
+                <div class="text-center text-gray-600 text-xs py-2 italic shrink-0 w-full">Connection secure & end-to-end encrypted.</div>
                 <div class="bg-[#1a1a1a] border border-[#222] rounded-lg p-3 text-gray-300 max-w-[85%] shrink-0 self-start">
-                    Hello there, I saw your profile variables and noticed our core desires align perfectly. Where in Europe are you based out of?
+                    Hello there! I've loaded my public media and hidden portfolio vault streams onto my interface module. 
                 </div>
+                <div class="w-full max-w-[85%] self-start mt-1">${ppvPayloadHTML}</div>
             `;
+            
             checkChatPermissions();
-            setTimeout(() => { msgContainer.scrollTop = msgContainer.scrollHeight; }, 50);
+        }
+
+        function unlockPPVStream(targetId) {
+            // Log local timestamp baseline parameters
+            globalUnlockedTimestamps[targetId] = Date.now();
+            simulateUpgrade();
+        }
+
+        function updateChatSelfDestructTimers() {
+            const tickers = document.querySelectorAll('#countdownTicker');
+            tickers.forEach(ticker => {
+                const targetId = ticker.getAttribute('data-target-id');
+                const startTimestamp = globalUnlockedTimestamps[targetId];
+                if (!startTimestamp) return;
+
+                const elapsed = Date.now() - startTimestamp;
+                const totalDuration = 60 * 60 * 1000; // 60 Minutes
+                const remaining = totalDuration - elapsed;
+
+                if (remaining <= 0) {
+                    // Trigger instant interface re-render to execute self-destruct layout state
+                    const openModal = !document.getElementById('chatModal').classList.contains('hidden');
+                    if (openModal) {
+                        const targetName = document.getElementById('chatTargetName').innerText;
+                        // Dynamically re-evaluate visual trees
+                        renderChatMessages(targetId, currentUserProfile.premium_vault_media);
+                    }
+                } else {
+                    const minutes = Math.floor(remaining / 60000);
+                    const seconds = Math.floor((remaining % 60000) / 1000);
+                    ticker.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            });
         }
 
         function checkChatPermissions() {
@@ -325,13 +421,9 @@
 
         async function simulateUpgrade() {
             const { error } = await _supabase.from('profiles').update({ is_subscribed: true }).eq('id', currentUserProfile.id);
-            if (!error) {
-                alert('Subscription successful! Premium PPV privileges unlocked.');
-                location.reload();
-            }
+            if (!error) { fetchUserProfile(currentUserProfile.id); }
         }
 
-        document.getElementById('upgradeBtn').addEventListener('click', simulateUpgrade);
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             await _supabase.auth.signOut();
             window.location.href = 'index.html';
