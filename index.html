@@ -1,5 +1,159 @@
-<!-- Tailwind CSS for instant luxury styling -->
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Erosia — Onboarding</title>
+    <!-- Tailwind CSS Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Supabase Core Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #0a0a0a; color: #ffffff; font-family: system-ui, sans-serif; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen px-4 py-8">
 
-<!-- The Supabase JS Engine -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <div class="w-full max-w-md bg-[#121212] border border-[#222222] rounded-2xl p-6 space-y-6">
+        
+        <!-- Premium Brand Identity Banner -->
+        <div class="text-center space-y-2">
+            <img src="Pink Monochrome Simple Modern Minimalist Fashion Brand Logo.png" alt="L'Erosia Logo" class="mx-auto max-w-[160px] h-auto">
+            <p class="text-xs tracking-[0.2em] text-[#8d0b0b] uppercase font-semibold">Verify Your Desires</p>
+        </div>
+
+        <!-- Onboarding Multi-Step Form -->
+        <form id="onboardingForm" class="space-y-4">
+            
+            <!-- Email & Password for Account Creation -->
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Private Email</label>
+                    <input type="email" id="email" required class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm focus:outline-none focus:border-[#8d0b0b]">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Security Password</label>
+                    <input type="password" id="password" required class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm focus:outline-none focus:border-[#8d0b0b]">
+                </div>
+            </div>
+
+            <!-- Profile Parameters -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">First Name</label>
+                    <input type="text" id="name" required class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm focus:outline-none focus:border-[#8d0b0b]">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Age</label>
+                    <input type="number" id="age" min="18" max="99" required class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm focus:outline-none focus:border-[#8d0b0b]">
+                </div>
+            </div>
+
+            <!-- European Demographic Selector -->
+            <div>
+                <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">European Base Location</label>
+                <select id="city" required class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm focus:outline-none focus:border-[#8d0b0b] text-white">
+                    <option value="" disabled selected>Select premium region...</option>
+                    <option value="London">London, UK</option>
+                    <option value="Paris">Paris, France</option>
+                    <option value="Berlin">Berlin, Germany</option>
+                    <option value="Monaco">Monaco, MC</option>
+                    <option value="Milan">Milan, Italy</option>
+                    <option value="Zurich">Zurich, Switzerland</option>
+                </select>
+            </div>
+
+            <!-- Matching Layout Logic Split -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Your Identity</label>
+                    <select id="gender" required class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm focus:outline-none focus:border-[#8d0b0b]">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Seeking</label>
+                    <select id="targetGender" required class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm focus:outline-none focus:border-[#8d0b0b]">
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Elite Desire Matrix Checklist -->
+            <div>
+                <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2">Primary Intent / Desires</label>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <label class="flex items-center space-x-2 bg-[#1a1a1a] p-2 rounded border border-[#2ea] border-opacity-10 cursor-pointer">
+                        <input type="checkbox" name="desires" value="Luxury Matchmaking" class="accent-[#8d0b0b]">
+                        <span>Luxury Matchmaking</span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-[#1a1a1a] p-2 rounded border border-[#2ea] border-opacity-10 cursor-pointer">
+                        <input type="checkbox" name="desires" value="Casual Intimacy" class="accent-[#8d0b0b]">
+                        <span>Casual Intimacy</span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-[#1a1a1a] p-2 rounded border border-[#2ea] border-opacity-10 cursor-pointer">
+                        <input type="checkbox" name="desires" value="Exclusive Dating" class="accent-[#8d0b0b]">
+                        <span>Exclusive Dating</span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-[#1a1a1a] p-2 rounded border border-[#2ea] border-opacity-10 cursor-pointer">
+                        <input type="checkbox" name="desires" value="Discreet Curations" class="accent-[#8d0b0b]">
+                        <span>Discreet Curations</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Execution Trigger Button -->
+            <button type="submit" class="w-full bg-[#8d0b0b] hover:bg-[#b00e0e] text-white text-sm uppercase font-bold tracking-widest py-3 rounded-lg shadow-lg transition-colors cursor-pointer">
+                Enter Sanctuary
+            </button>
+
+        </form>
+    </div>
+
+    <!-- Script Block linking Inputs directly to your live Supabase Engine -->
+    <script>
+        const SUPABASE_URL = "https://njonmqbsqfvmwowbgfeb.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_u3_U6zXwc6UToJukPAkCPg_3ovi3yI9";
+        
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.getElementById('onboardingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const name = document.getElementById('name').value;
+            const age = parseInt(document.getElementById('age').value);
+            const city = document.getElementById('city').value;
+            const gender = document.getElementById('gender').value;
+            const target_gender = document.getElementById('targetGender').value;
+            
+            // Gather selected checkboxes for desires array mapping
+            const checkedDesires = Array.from(document.querySelectorAll('input[name="desires"]:checked')).map(cb => cb.value);
+
+            try {
+                // 1. Core Authentication Registration
+                const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password });
+                if (authError) throw authError;
+
+                if (authData.user) {
+                    // 2. Profile Creation Inside our Secure Database Table
+                    const { error: profileError } = await _supabase.from('profiles').insert([{
+                        id: authData.user.id,
+                        name, age, city, gender, target_gender,
+                        desires: checkedDesires
+                    }]);
+                    if (profileError) throw profileError;
+
+                    alert('Account initialized inside sanctuary. Redirecting...');
+                    window.location.href = 'app.html';
+                }
+            } catch (err) {
+                alert('Initialization error: ' + err.message);
+            }
+        });
+    </script>
+</body>
+</html>
