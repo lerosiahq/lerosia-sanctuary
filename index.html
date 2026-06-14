@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L'Erosia — Entry Gate</title>
-    <!-- Tailwind CSS Engine -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Supabase Core Engine -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #0a0a0a; color: #ffffff; font-family: system-ui, sans-serif; }
@@ -14,14 +12,12 @@
 </head>
 <body class="flex flex-col min-h-screen items-center justify-center bg-[#0a0a0a] px-4">
 
-    <!-- Premium Branding Wrapper -->
     <div class="max-w-md w-full bg-[#121212] border border-[#222] rounded-2xl p-8 space-y-6 shadow-2xl">
         <div class="text-center space-y-2">
-            <h1 id="portalTitle" class="text-xl tracking-[0.4em] text-[#8d0b0b] font-bold uppercase">L'Erosia</h1>
+            <h1 class="text-xl tracking-[0.4em] text-[#8d0b0b] font-bold uppercase">L'Erosia</h1>
             <p id="portalSubtitle" class="text-xs uppercase tracking-widest text-gray-400">Initialize Premium Entry</p>
         </div>
 
-        <!-- Single Core Authentication Form -->
         <form id="authForm" class="space-y-4">
             <div>
                 <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1">Digital Identifier (Email)</label>
@@ -38,31 +34,29 @@
             </button>
         </form>
 
-        <!-- Dynamic Interface Switcher -->
         <div class="text-center">
-            <p id="switchText" class="text-xs text-gray-400">
-                Already holding verified credentials? 
-                <button id="switchBtn" class="text-[#8d0b0b] hover:underline font-medium ml-1 cursor-pointer">Log In Here</button>
+            <p id="modeToggleWrapper" class="text-xs text-gray-400">
+                <span id="staticPromptLabel">Already holding verified credentials?</span>
+                <button type="button" id="switchBtn" class="text-[#8d0b0b] hover:underline font-medium ml-1 cursor-pointer">Log In Here</button>
             </p>
         </div>
     </div>
 
-    <!-- Interface Controller & Supabase Database Core Script -->
     <script>
         const SUPABASE_URL = "https://njonmqbsqfvmwowbgfeb.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable_u3_U6zXwc6UToJukPAkCPg_3ovi3yI9";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // App state tracking variable: true = login mode, false = signup/registration mode
+        // State machine configuration tracking current view
         let isLoginMode = true; 
 
         const portalSubtitle = document.getElementById('portalSubtitle');
         const submitBtn = document.getElementById('submitBtn');
-        const switchText = document.getElementById('switchText');
+        const staticPromptLabel = document.getElementById('staticPromptLabel');
         const switchBtn = document.getElementById('switchBtn');
         const authForm = document.getElementById('authForm');
 
-        // Check if user is already logged in right away. If they are, push them straight into the sanctuary.
+        // Bypasses entry gate instantly if a database active token is stored
         window.addEventListener('DOMContentLoaded', async () => {
             const { data: { session } } = await _supabase.auth.getSession();
             if (session) {
@@ -70,30 +64,32 @@
             }
         });
 
-        // Dynamic layout switcher toggle engine
-        switchBtn.addEventListener('click', () => {
+        // Safe toggle management engine that keeps button memory active
+        switchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             isLoginMode = !isLoginMode;
+            
             if (isLoginMode) {
                 portalSubtitle.innerText = "Initialize Premium Entry";
                 submitBtn.innerText = "Access Sanctuary";
-                switchText.innerHTML = `Already holding verified credentials? <button id="switchBtn" class="text-[#8d0b0b] hover:underline font-medium ml-1 cursor-pointer">Log In Here</button>`;
+                staticPromptLabel.innerText = "Already holding verified credentials?";
+                switchBtn.innerText = "Log In Here";
             } else {
                 portalSubtitle.innerText = "Create New Sanctuary Account";
                 submitBtn.innerText = "Register Identity";
-                switchText.innerHTML = `New to the platform ecosystem? <button id="switchBtn" class="text-[#8d0b0b] hover:underline font-medium ml-1 cursor-pointer">Sign Up Here</button>`;
+                staticPromptLabel.innerText = "New to the platform ecosystem?";
+                switchBtn.innerText = "Sign Up Here";
             }
-            // Re-bind click event to the newly rendered button node
-            document.getElementById('switchBtn').addEventListener('click', arguments.callee);
         });
 
-        // Unified form submit handler routing traffic based on auth state mode
+        // Form Router
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('passwordInput').value;
 
             if (isLoginMode) {
-                // Execute standard Supabase sign-in protocols
+                // Core execution path for existing profiles
                 const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
                 if (error) {
                     alert(`Authentication Failed: ${error.message}`);
@@ -101,12 +97,12 @@
                     window.location.href = 'app.html';
                 }
             } else {
-                // Execute sign-up protocols
+                // Core execution path for brand new sign-ups
                 const { data, error } = await _supabase.auth.signUp({ email, password });
                 if (error) {
                     alert(`Registration Failed: ${error.message}`);
                 } else {
-                    alert('Registration submitted successfully! Welcome to L\'Erosia.');
+                    alert('Registration complete. Directing onto your dashboard platform sequence...');
                     window.location.href = 'app.html';
                 }
             }
