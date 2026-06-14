@@ -8,10 +8,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Supabase Core Engine -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
+    <<style>
         body { background-color: #0a0a0a; color: #ffffff; font-family: system-ui, sans-serif; }
         .blurred { filter: blur(20px); pointer-events: none; user-select: none; }
         .hold-to-view { transition: filter 0.2s ease; }
+        
+        /* Premium Polish: Hide default scrollbars while keeping scroll functionality operational */
+        #chatMessages::-webkit-scrollbar { display: none; }
+        #chatMessages { -ms-overflow-style: none; scrollbar-width: none; padding-bottom: 24px; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen bg-[#0a0a0a]">
