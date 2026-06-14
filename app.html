@@ -8,19 +8,18 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Supabase Core Engine -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #0a0a0a; color: #ffffff; font-family: system-ui, sans-serif; }
         
         /* Premium Polish: Hide default scrollbars while keeping scroll functionality operational */
         #chatMessages::-webkit-scrollbar { display: none; }
-        #chatMessages { -ms-overflow-style: none; scrollbar-width: none; padding-bottom: 24px; }
+        #chatMessages { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen bg-[#0a0a0a]">
 
     <!-- Top Navigation Bar -->
-    <header class="w-full bg-[#121212] border-b border-[#222] p-4 flex justify-between items-center sticky top-0 z-50">
+    <header class="w-full bg-[#121212] border-b border-[#222] p-4 flex justify-between items-center sticky top-0 z-50 shrink-0">
         <div class="text-sm tracking-[0.3em] text-[#8d0b0b] font-bold uppercase">L'Erosia</div>
         <button id="logoutBtn" class="text-xs uppercase tracking-wider text-gray-400 hover:text-white cursor-pointer">Exit</button>
     </header>
@@ -51,22 +50,22 @@
     </main>
 
     <!-- Dedicated Floating Messaging Arena Container -->
-    <div id="chatModal" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col max-w-md mx-auto">
-        <header class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between">
+    <div id="chatModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col max-w-md mx-auto">
+        <header class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between shrink-0">
             <div class="flex items-center space-x-3">
                 <div id="chatTargetAvatar" class="w-8 h-8 rounded-full bg-[#222] overflow-hidden"></div>
                 <span id="chatTargetName" class="text-sm font-medium">Chat</span>
             </div>
-            <button onclick="closeChat()" class="text-gray-400 hover:text-white text-sm uppercase">Close</button>
+            <button onclick="closeChat()" class="text-gray-400 hover:text-white text-sm uppercase cursor-pointer">Close</button>
         </header>
 
-        <!-- Message History Log Window -->
-        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 text-sm">
+        <!-- Message History Log Window (Fixed Frame & Scroll Forced) -->
+        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 text-sm flex flex-col min-h-0 pb-8">
             <!-- Text fragments print dynamically here -->
         </div>
 
-        <!-- Interactive Paywall Gate Overlays (Solid Luxury Pillar) -->
-        <div id="chatPaywall" class="hidden p-6 bg-[#121212] border-t-2 border-[#8d0b0b] text-center space-y-4 relative z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.8)]">
+        <!-- Interactive Paywall Gate Overlays (Pushed to absolute footer layout) -->
+        <div id="chatPaywall" class="hidden p-6 bg-[#121212] border-t border-[#8d0b0b] text-center space-y-4 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.8)]">
             <p class="text-sm font-semibold text-white">Free Interaction Limit Achieved</p>
             <p class="text-xs text-gray-400">To maintain premium privacy standards, subscribing unlocks unlimited ongoing communication.</p>
             <button onclick="simulateUpgrade()" class="w-full bg-[#8d0b0b] hover:bg-[#b00e0e] text-white text-xs uppercase font-bold tracking-widest py-3 rounded-lg cursor-pointer transition-colors">
@@ -75,9 +74,9 @@
         </div>
 
         <!-- Text Composition Panel -->
-        <div id="chatInputArea" class="p-4 bg-[#121212] border-t border-[#222] flex items-center space-x-2">
-            <input type="text" id="messageInput" placeholder="Send typed desire..." class="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg p-2 text-sm focus:outline-none focus:border-[#8d0b0b]">
-            <button onclick="sendMessage()" class="bg-[#8d0b0b] px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wider">Send</button>
+        <div id="chatInputArea" class="p-4 bg-[#121212] border-t border-[#222] flex items-center space-x-2 shrink-0">
+            <input type="text" id="messageInput" placeholder="Send typed desire..." class="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg p-2 text-sm focus:outline-none focus:border-[#8d0b0b] text-white">
+            <button onclick="sendMessage()" class="bg-[#8d0b0b] hover:bg-[#b00e0e] px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wider cursor-pointer transition-colors">Send</button>
         </div>
     </div>
 
@@ -125,7 +124,6 @@
         }
 
         async function loadMatchingFeed() {
-            // Advanced Cross-Matching Query Algorithm Logic executed dynamically
             const { data: matches, error } = await _supabase.from('profiles')
                 .select('*')
                 .eq('gender', currentUserProfile.target_gender)
@@ -142,7 +140,6 @@
             }
 
             matches.forEach(profile => {
-                // Determine whether user gets the premium blur treatment
                 const needsBlur = !currentUserProfile.is_subscribed;
                 const blurClass = needsBlur ? 'blurred' : '';
                 
@@ -157,25 +154,23 @@
                         <span class="text-[10px] uppercase tracking-widest bg-black text-[#8d0b0b] border border-[#333] px-2 py-0.5 rounded">Match</span>
                     </div>
                     
-                    <!-- Media Presentation Display Grid Container -->
                     <div class="relative w-full h-48 bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#222]">
                         <div class="absolute inset-0 flex items-center justify-center text-xs text-gray-600">Premium Vault Image</div>
-                        <!-- Blurred image implementation container fallback -->
                         <div class="w-full h-full bg-gradient-to-tr from-[#300] to-[#111] ${blurClass} hold-to-view"></div>
                         
                         ${needsBlur ? `
                             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
                                 <p class="text-xs font-medium text-gray-200 mb-2">Image Protected By Premium Encryption</p>
-                                <button onclick="simulateUpgrade()" class="bg-[#8d0b0b] text-[10px] text-white font-bold uppercase tracking-wider px-3 py-1.5 rounded shadow">Unlock Member Details</button>
+                                <button onclick="simulateUpgrade()" class="bg-[#8d0b0b] text-[10px] text-white font-bold uppercase tracking-wider px-3 py-1.5 rounded shadow cursor-pointer">Unlock Member Details</button>
                             </div>
                         ` : ''}
                     </div>
 
                     <div class="flex flex-wrap gap-1">
-                        ${profile.desires.map(d => `<span class="text-[10px] bg-[#1a1a1a] px-2 py-1 rounded text-gray-400 border border-[#222]">${d}</span>`).join('')}
+                        ${profile.desires ? profile.desires.map(d => `<span class="text-[10px] bg-[#1a1a1a] px-2 py-1 rounded text-gray-400 border border-[#222]">${d}</span>`).join('') : ''}
                     </div>
 
-                    <button onclick="openChat('${profile.id}', '${profile.name}')" class="w-full bg-[#161616] hover:bg-[#222] text-gray-300 hover:text-white border border-[#222] text-xs uppercase tracking-widest py-2 rounded transition-colors font-medium">
+                    <button onclick="openChat('${profile.id}', '${profile.name}')" class="w-full bg-[#161616] hover:bg-[#222] text-gray-300 hover:text-white border border-[#222] text-xs uppercase tracking-widest py-2 rounded transition-colors font-medium cursor-pointer">
                         Initiate Connection
                     </button>
                 `;
@@ -189,13 +184,14 @@
             
             const msgContainer = document.getElementById('chatMessages');
             msgContainer.innerHTML = `
-                <div class="text-center text-gray-600 text-xs py-4 italic">Secure connection route initialized.</div>
-                <div class="bg-[#1a1a1a] border border-[#222] rounded-lg p-3 text-gray-300 max-w-[85%]">
+                <div class="text-center text-gray-600 text-xs py-4 italic shrink-0">Secure connection route initialized.</div>
+                <div class="bg-[#1a1a1a] border border-[#222] rounded-lg p-3 text-gray-300 max-w-[85%] shrink-0">
                     Hello there, I saw your profile variables and noticed our core desires align perfectly. Where in Europe are you based out of?
                 </div>
             `;
             
             checkChatPermissions();
+            setTimeout(() => { msgContainer.scrollTop = msgContainer.scrollHeight; }, 50);
         }
 
         function checkChatPermissions() {
@@ -217,26 +213,23 @@
 
             const msgContainer = document.getElementById('chatMessages');
             
-            // Render sender's message block instantly in UI
             const userMsg = document.createElement('div');
-            userMsg.className = "bg-[#8d0b0b] text-white rounded-lg p-3 max-w-[85%] ml-auto text-right font-medium";
+            userMsg.className = "bg-[#8d0b0b] text-white rounded-lg p-3 max-w-[85%] ml-auto text-right font-medium shrink-0";
             userMsg.innerText = input.value;
             msgContainer.appendChild(userMsg);
             
             input.value = '';
             msgContainer.scrollTop = msgContainer.scrollHeight;
 
-            // Increment database tracking loop counters
             messagingCapCount++;
             
             if (!currentUserProfile.is_subscribed) {
                 await _supabase.from('profiles').update({ message_count: messagingCapCount }).eq('id', currentUserProfile.id);
                 
-                // Trigger soft counter responses to guide the flow structure
                 if (messagingCapCount >= 10) {
                     setTimeout(() => {
                         checkChatPermissions();
-                    }, 800);
+                    }, 500);
                 }
             }
         }
@@ -246,7 +239,6 @@
         }
 
         async function simulateUpgrade() {
-            // Emulate backend webhook checkout confirmations for immediate validation
             const { error } = await _supabase.from('profiles').update({ is_subscribed: true }).eq('id', currentUserProfile.id);
             if (!error) {
                 alert('Subscription processing successful! Premium privileges deployed inside your sanctuary workspace layout.');
