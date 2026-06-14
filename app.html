@@ -1,107 +1,98 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>L'Erosia — Sanctuary</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { background-color: #0a0a0a; color: #ffffff; font-family: system-ui, sans-serif; }
-        #chatMessages::-webkit-scrollbar { display: none; }
-    </style>
-</head>
-<body class="flex flex-col min-h-screen bg-[#0a0a0a]">
-
-    <!-- Header -->
-    <header class="w-full bg-[#121212] border-b border-[#222] p-4 flex justify-between items-center sticky top-0 z-50">
-        <div class="text-sm tracking-[0.3em] text-[#8d0b0b] font-bold uppercase">L'Erosia</div>
-    </header>
-
-    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 space-y-8 pb-24">
-        
-        <!-- Account Status -->
-        <div class="bg-[#121212] border border-[#222] rounded-xl p-4 flex justify-between items-center">
-            <div>
-                <p class="text-xs text-gray-400 uppercase tracking-wider">Account Status</p>
-                <p id="statusLabel" class="text-sm font-bold text-gray-300">Verified Premium Elite</p>
-            </div>
-        </div>
-
-        <!-- Management Portfolio -->
-        <div class="space-y-3">
-            <h2 class="text-xs uppercase tracking-[0.2em] text-[#8d0b0b] font-semibold">Manage Portfolio</h2>
-            <div id="galleryManagement" class="grid grid-cols-2 gap-4">
-                <div class="bg-[#121212] border border-[#333] p-3 rounded-lg text-center">
-                    <p class="text-[10px] text-gray-400 mb-2">Public Image</p>
-                    <div id="pubPreview" class="h-24 bg-black rounded border border-[#222] mb-2 flex items-center justify-center">?</div>
-                    <button onclick="removeMedia('public')" class="text-[9px] text-red-500 hover:text-red-400 uppercase">Remove</button>
-                </div>
-                <div class="bg-[#121212] border border-[#333] p-3 rounded-lg text-center">
-                    <p class="text-[10px] text-gray-400 mb-2">Vault Media</p>
-                    <div id="vaultPreview" class="h-24 bg-black rounded border border-[#222] mb-2 flex items-center justify-center">?</div>
-                    <button onclick="removeMedia('vault')" class="text-[9px] text-red-500 hover:text-red-400 uppercase">Remove</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Matches Feed -->
-        <div class="space-y-3">
-            <h2 class="text-xs uppercase tracking-[0.2em] text-[#8d0b0b] font-semibold">Matched Desires</h2>
-            <div id="matchesFeed" class="space-y-4 text-center text-gray-600 text-sm italic">Scanning European sectors for profiles...</div>
-        </div>
-    </main>
-
-    <!-- Chat Modal -->
-    <div id="chatModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-between max-w-md mx-auto">
-        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3"></div>
-        <div id="chatInputArea" class="p-3 bg-[#121212] border-t border-[#222] flex items-center space-x-2">
-            <input type="text" id="messageInput" placeholder="Send desire..." class="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm text-white">
-            <button onclick="sendMessage()" class="bg-[#8d0b0b] px-5 py-2.5 rounded-lg text-sm font-bold uppercase text-white">Send</button>
-        </div>
-    </div>
-
-    <script>
-        const _supabase = supabase.createClient("https://njonmqbsqfvmwowbgfeb.supabase.co", "sb_publishable_u3_U6zXwc6UToJukPAkCPg_3ovi3yI9");
-        let currentUserProfile = { is_subscribed: false }; // Simplified for reference
-
-        async function sendMessage() {
-            const input = document.getElementById('messageInput'), message = input.value.trim();
-            // Anti-Spam Security Protocol
-            const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-            const phonePattern = /(\+\d{1,3}[- ]?)?\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4}/;
-
-            if (emailPattern.test(message) || phonePattern.test(message)) {
-                alert("Policy: For your safety, sharing direct contact details is prohibited.");
-                return;
-            }
-            // Logic to append message follows...
-        }
-
-        async function removeMedia(type) {
-            if (!confirm(`Are you sure you want to remove your ${type} asset?`)) return;
-            const field = type === 'public' ? 'public_image' : 'premium_vault_media';
-            // Backend update logic...
-            location.reload();
-        }
-
-        function renderChatMessages(targetId, premiumVaultMedia, publicMedia) {
-            // Free Public Gallery Logic
-            let publicHTML = publicMedia ? `<div class="w-full h-40 rounded-lg overflow-hidden border border-[#222]"><img src="${publicMedia}" class="w-full h-full object-cover"></div>` : '';
-            
-            // Subscriber-Gated Vault Logic
-            let canSee = currentUserProfile.is_subscribed;
-            let vaultHTML = premiumVaultMedia ? `
-                <div class="w-full bg-[#141414] border border-[#8d0b0b]/40 rounded-lg p-2">
-                    <div class="w-full h-44 bg-black rounded-md overflow-hidden relative">
-                        <div class="${canSee ? "" : "blur-xl grayscale"} w-full h-full">
-                            ${premiumVaultMedia.endsWith('.mp4') ? `<video src="${premiumVaultMedia}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>` : `<img src="${premiumVaultMedia}" class="w-full h-full object-cover">`}
+<div class="rounded-lg overflow-hidden border border-[#333]">${publicMedia}</div>
+                            <div class="rounded-lg overflow-hidden border border-[#333] relative">
+                                ${vaultMedia}
+                                <div class="absolute inset-0 flex items-center justify-center"><span class="text-[9px] font-bold text-white uppercase tracking-widest bg-black/50 px-2 py-1 rounded">Locked</span></div>
+                            </div>
                         </div>
-                        ${!canSee ? '<div class="absolute inset-0 flex items-center justify-center text-[10px] text-white uppercase font-bold">Purchase to view</div>' : ''}
+                        <p class="text-[10px] text-gray-500 italic">Desires: ${activeTargetProfile.desires || 'No tags set.'}</p>
                     </div>
-                </div>` : '';
-            
-            document.getElementById('chatMessages').innerHTML = publicHTML + vaultHTML;
+                `;
+                panel.classList.remove('hidden');
+            } else {
+                panel.classList.add('hidden');
+            }
+        }
+
+        async function populateProfileFields() {
+            document.getElementById('profileName').value = currentUserProfile.name || '';
+            document.getElementById('profileAge').value = currentUserProfile.age || '';
+            document.getElementById('profileCity').value = currentUserProfile.city || '';
+            document.getElementById('profileDesires').value = currentUserProfile.desires || '';
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const updates = {
+                name: document.getElementById('profileName').value,
+                age: parseInt(document.getElementById('profileAge').value),
+                city: document.getElementById('profileCity').value,
+                desires: document.getElementById('profileDesires').value
+            };
+            await _supabase.from('profiles').update(updates).eq('id', currentUserProfile.id);
+            toggleProfileModal(false);
+            fetchUserProfile(currentUserProfile.id);
+        });
+
+        function toggleProfileModal(show) { document.getElementById('profileModal').classList.toggle('hidden', !show); }
+        function closeChat() { document.getElementById('chatModal').classList.add('hidden'); }
+        function appendQuickEmoji(e) { document.getElementById('messageInput').value += e; }
+        function simulateUpgrade() { alert("Redirecting to secure gateway for L'Erosia Premium ($27)..."); }
+
+        async function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const scale = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scale;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.7);
+                    };
+                };
+            });
+        }
+
+        async function validateVideoDuration(file) {
+            return new Promise((resolve) => {
+                const video = document.createElement('video');
+                video.preload = 'metadata';
+                video.onloadedmetadata = () => {
+                    window.URL.revokeObjectURL(video.src);
+                    resolve(video.duration <= 15.5);
+                };
+                video.src = URL.createObjectURL(file);
+            });
+        }
+
+        document.getElementById('logoutBtn').onclick = () => { _supabase.auth.signOut(); window.location.href = 'index.html'; };
+
+        async function loadMatchingFeed() {
+            const { data } = await _supabase.from('profiles').select('*').neq('id', currentUserProfile.id).limit(5);
+            const feed = document.getElementById('matchesFeed');
+            if (data && data.length > 0) {
+                feed.innerHTML = data.map(p => `
+                    <div class="flex items-center justify-between bg-[#121212] p-3 rounded-lg border border-[#222]">
+                        <span class="text-sm text-gray-300 font-bold">${p.name}</span>
+                        <button onclick="openChatWith('${p.id}')" class="text-[10px] uppercase font-bold text-[#8d0b0b] hover:text-white cursor-pointer">View Desire</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function openChatWith(id) {
+            const { data } = await _supabase.from('profiles').select('*').eq('id', id).single();
+            activeTargetProfile = data;
+            document.getElementById('chatTargetName').innerText = data.name;
+            document.getElementById('chatTargetAgeLocation').innerText = `${data.age} • ${data.city}`;
+            renderChatMessages(data.id, data.premium_vault_media);
+            document.getElementById('chatModal').classList.remove('hidden');
         }
     </script>
 </body>
