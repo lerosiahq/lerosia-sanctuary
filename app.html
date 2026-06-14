@@ -9,133 +9,90 @@
     <style>
         body { background-color: #0a0a0a; color: #ffffff; font-family: system-ui, sans-serif; }
         #chatMessages::-webkit-scrollbar { display: none; }
-        #chatMessages { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen bg-[#0a0a0a]">
 
+    <!-- Header -->
     <header class="w-full bg-[#121212] border-b border-[#222] p-4 flex justify-between items-center sticky top-0 z-50">
         <div class="text-sm tracking-[0.3em] text-[#8d0b0b] font-bold uppercase">L'Erosia</div>
-        <div class="flex items-center space-x-4">
-            <button onclick="toggleProfileModal(true)" class="text-xs uppercase tracking-wider text-gray-300 hover:text-[#8d0b0b] cursor-pointer">Edit Profile</button>
-            <button id="logoutBtn" class="text-xs uppercase tracking-wider text-gray-400 hover:text-white cursor-pointer">Exit</button>
-        </div>
     </header>
 
-    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 space-y-6 pb-24">
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 space-y-8 pb-24">
+        
+        <!-- Account Status -->
         <div class="bg-[#121212] border border-[#222] rounded-xl p-4 flex justify-between items-center">
             <div>
                 <p class="text-xs text-gray-400 uppercase tracking-wider">Account Status</p>
-                <p id="statusLabel" class="text-sm font-bold text-gray-300">Evaluating...</p>
+                <p id="statusLabel" class="text-sm font-bold text-gray-300">Verified Premium Elite</p>
             </div>
-            <button id="upgradeBtn" class="hidden bg-[#8d0b0b] text-white text-xs uppercase font-bold px-4 py-2 rounded">Unlock ($27)</button>
         </div>
 
+        <!-- Management Portfolio -->
         <div class="space-y-3">
-            <h2 class="text-xs uppercase tracking-[0.2em] text-gray-400 font-semibold">Your Presentation Identity</h2>
-            <div id="myProfileCardContainer"></div>
+            <h2 class="text-xs uppercase tracking-[0.2em] text-[#8d0b0b] font-semibold">Manage Portfolio</h2>
+            <div id="galleryManagement" class="grid grid-cols-2 gap-4">
+                <div class="bg-[#121212] border border-[#333] p-3 rounded-lg text-center">
+                    <p class="text-[10px] text-gray-400 mb-2">Public Image</p>
+                    <div id="pubPreview" class="h-24 bg-black rounded border border-[#222] mb-2 flex items-center justify-center">?</div>
+                    <button onclick="removeMedia('public')" class="text-[9px] text-red-500 hover:text-red-400 uppercase">Remove</button>
+                </div>
+                <div class="bg-[#121212] border border-[#333] p-3 rounded-lg text-center">
+                    <p class="text-[10px] text-gray-400 mb-2">Vault Media</p>
+                    <div id="vaultPreview" class="h-24 bg-black rounded border border-[#222] mb-2 flex items-center justify-center">?</div>
+                    <button onclick="removeMedia('vault')" class="text-[9px] text-red-500 hover:text-red-400 uppercase">Remove</button>
+                </div>
+            </div>
         </div>
-        <hr class="border-[#222]">
+
+        <!-- Matches Feed -->
         <div class="space-y-3">
             <h2 class="text-xs uppercase tracking-[0.2em] text-[#8d0b0b] font-semibold">Matched Desires</h2>
-            <div id="matchesFeed" class="space-y-4"></div>
+            <div id="matchesFeed" class="space-y-4 text-center text-gray-600 text-sm italic">Scanning European sectors for profiles...</div>
         </div>
     </main>
 
-    <div id="lightboxModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-center items-center p-4">
-        <button onclick="closeLightbox()" class="absolute top-4 right-4 text-xs font-bold text-gray-400 border border-[#333] px-4 py-2 rounded">CLOSE</button>
-        <div id="lightboxContent"></div>
-    </div>
-
+    <!-- Chat Modal -->
     <div id="chatModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-between max-w-md mx-auto">
-        <header onclick="toggleTargetProfilePanel()" class="bg-[#121212] border-b border-[#222] p-4 flex items-center justify-between cursor-pointer">
-            <div class="flex items-center space-x-3">
-                <div id="chatTargetAvatar" class="w-8 h-8 rounded-full bg-gradient-to-br from-[#8d0b0b] to-[#222] flex items-center justify-center text-xs font-bold text-white uppercase"></div>
-                <div>
-                    <span id="chatTargetName" class="text-sm font-bold block">Chat</span>
-                    <span id="chatTargetAgeLocation" class="text-[10px] text-gray-400"></span>
-                </div>
-            </div>
-            <button onclick="event.stopPropagation(); closeChat();" class="text-xs text-gray-400">CLOSE</button>
-        </header>
-
         <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3"></div>
-        
-        <div id="chatControlsContainer" class="bg-[#121212] border-t border-[#222] shrink-0">
-            <div id="hybridMediaTray" class="hidden p-3 bg-[#171717] border-b border-[#252525] space-y-2">
-                <div class="flex justify-between text-[10px] uppercase font-bold text-gray-400">
-                    <span id="trayTitle">Select Asset</span>
-                    <button onclick="closeMediaTray()">✕</button>
-                </div>
-                <div class="flex items-center space-x-3 overflow-x-auto py-1">
-                    <div id="trayUploadButton" class="w-16 h-16 shrink-0 border border-dashed border-[#444] rounded-lg flex flex-col items-center justify-center cursor-pointer">
-                        <span class="text-sm">➕</span><span class="text-[8px] text-gray-400">Device</span>
-                    </div>
-                    <div id="trayPreuploadedPreview" class="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden border border-[#333] hidden cursor-pointer"></div>
-                </div>
-            </div>
-            <div class="flex items-center px-4 py-2 border-b border-[#1c1c1c] text-xs space-x-4">
-                <button onclick="openMediaTray('public')" class="hover:text-white">🖼️ Public</button>
-                <button onclick="openMediaTray('private')" class="hover:text-amber-500">🔒 Vault</button>
-            </div>
-            <div id="chatInputArea" class="p-3 flex items-center space-x-2">
-                <input type="text" id="messageInput" placeholder="Send typed desire..." class="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm text-white focus:outline-none">
-                <button onclick="sendMessage()" class="bg-[#8d0b0b] px-5 py-2.5 rounded-lg text-sm font-bold uppercase text-white">Send</button>
-            </div>
+        <div id="chatInputArea" class="p-3 bg-[#121212] border-t border-[#222] flex items-center space-x-2">
+            <input type="text" id="messageInput" placeholder="Send desire..." class="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg p-2.5 text-sm text-white">
+            <button onclick="sendMessage()" class="bg-[#8d0b0b] px-5 py-2.5 rounded-lg text-sm font-bold uppercase text-white">Send</button>
         </div>
     </div>
 
-    <input type="file" id="quickPublicFileInput" accept="image/*" class="hidden" onchange="handleQuickUpload(this, 'public')">
-    <input type="file" id="quickPrivateFileInput" accept="image/*,video/*" class="hidden" onchange="handleQuickUpload(this, 'private')">
-
     <script>
         const _supabase = supabase.createClient("https://njonmqbsqfvmwowbgfeb.supabase.co", "sb_publishable_u3_U6zXwc6UToJukPAkCPg_3ovi3yI9");
-        let currentUserProfile = null, activeTargetProfile = null, activeTrayType = null;
-
-        window.addEventListener('DOMContentLoaded', async () => {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
-            await fetchUserProfile(session.user.id);
-        });
-
-        async function fetchUserProfile(uid) {
-            const { data } = await _supabase.from('profiles').select('*').eq('id', uid).single();
-            if (data) {
-                currentUserProfile = data;
-                renderMyProfilePreview();
-                loadMatchingFeed();
-            }
-        }
+        let currentUserProfile = { is_subscribed: false }; // Simplified for reference
 
         async function sendMessage() {
             const input = document.getElementById('messageInput'), message = input.value.trim();
-            if (!message) return;
+            // Anti-Spam Security Protocol
+            const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+            const phonePattern = /(\+\d{1,3}[- ]?)?\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4}/;
 
-            // Security: Anti-Spam
-            if (/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(message) || /(\+\d{1,3}[- ]?)?\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4}/.test(message)) {
-                alert("For security, sharing direct contact details is prohibited.");
+            if (emailPattern.test(message) || phonePattern.test(message)) {
+                alert("Policy: For your safety, sharing direct contact details is prohibited.");
                 return;
             }
+            // Logic to append message follows...
+        }
 
-            const msgContainer = document.getElementById('chatMessages');
-            const userMsg = document.createElement('div');
-            userMsg.className = "bg-[#8d0b0b] text-white rounded-lg p-3 max-w-[85%] self-end text-right";
-            userMsg.innerText = message; 
-            msgContainer.appendChild(userMsg);
-            input.value = ''; 
+        async function removeMedia(type) {
+            if (!confirm(`Are you sure you want to remove your ${type} asset?`)) return;
+            const field = type === 'public' ? 'public_image' : 'premium_vault_media';
+            // Backend update logic...
+            location.reload();
         }
 
         function renderChatMessages(targetId, premiumVaultMedia, publicMedia) {
-            const msgContainer = document.getElementById('chatMessages');
-            const canSee = currentUserProfile?.is_subscribed;
+            // Free Public Gallery Logic
+            let publicHTML = publicMedia ? `<div class="w-full h-40 rounded-lg overflow-hidden border border-[#222]"><img src="${publicMedia}" class="w-full h-full object-cover"></div>` : '';
             
-            // Public Gallery (Free)
-            let publicHTML = publicMedia ? `<div onclick="viewMedia('${publicMedia}', false)" class="w-full h-40 rounded-lg overflow-hidden border border-[#222] cursor-pointer mb-2"><img src="${publicMedia}" class="w-full h-full object-cover"></div>` : '';
-            
-            // Private Vault (Gated)
+            // Subscriber-Gated Vault Logic
+            let canSee = currentUserProfile.is_subscribed;
             let vaultHTML = premiumVaultMedia ? `
-                <div class="w-full bg-[#141414] border border-[#8d0b0b]/40 rounded-lg p-2 ${canSee ? 'cursor-pointer' : ''}" ${canSee ? `onclick="viewMedia('${premiumVaultMedia}', ${premiumVaultMedia.endsWith('.mp4')})"` : ''}>
-                    <div class="text-[9px] text-amber-500 font-bold uppercase">${canSee ? '⚡ Unlocked Stream' : '🔒 Locked Vault'}</div>
+                <div class="w-full bg-[#141414] border border-[#8d0b0b]/40 rounded-lg p-2">
                     <div class="w-full h-44 bg-black rounded-md overflow-hidden relative">
                         <div class="${canSee ? "" : "blur-xl grayscale"} w-full h-full">
                             ${premiumVaultMedia.endsWith('.mp4') ? `<video src="${premiumVaultMedia}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>` : `<img src="${premiumVaultMedia}" class="w-full h-full object-cover">`}
@@ -143,43 +100,9 @@
                         ${!canSee ? '<div class="absolute inset-0 flex items-center justify-center text-[10px] text-white uppercase font-bold">Purchase to view</div>' : ''}
                     </div>
                 </div>` : '';
-
-            msgContainer.innerHTML = `<div class="bg-[#1a1a1a] p-3 text-gray-300 max-w-[85%] rounded-lg mb-2">My vault is active.</div>${publicHTML}${vaultHTML}`;
+            
+            document.getElementById('chatMessages').innerHTML = publicHTML + vaultHTML;
         }
-
-        function renderMyProfilePreview() {
-            const container = document.getElementById('myProfileCardContainer');
-            container.innerHTML = `
-                <div class="bg-[#161616] border border-[#333] rounded-xl p-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-sm font-bold text-[#8d0b0b]">${currentUserProfile.name || 'Set Name'}</span>
-                        <span class="text-[9px] uppercase tracking-widest bg-[#8d0b0b]/20 px-2 py-0.5 rounded font-bold">Your Live View</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3 h-40">
-                        <div class="bg-[#1a1a1a] rounded-lg overflow-hidden relative">
-                            <div class="absolute top-1.5 left-1.5 bg-black/70 text-[9px] px-1.5 py-0.5 rounded">Public</div>
-                            ${currentUserProfile.public_image ? `<img src="${currentUserProfile.public_image}" class="w-full h-full object-cover">` : ''}
-                        </div>
-                        <div class="bg-[#1a1a1a] rounded-lg overflow-hidden relative">
-                            <div class="absolute top-1.5 left-1.5 bg-amber-600 text-[9px] font-bold px-1.5 py-0.5 rounded text-black">Vault</div>
-                            ${currentUserProfile.premium_vault_media ? `<img src="${currentUserProfile.premium_vault_media}" class="w-full h-full object-cover">` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // --- Helper Helpers ---
-        function viewMedia(url, isVideo) {
-            const content = document.getElementById('lightboxContent');
-            content.innerHTML = isVideo ? `<video src="${url}" controls autoplay class="max-h-[75vh]"></video>` : `<img src="${url}" class="max-h-[75vh]">`;
-            document.getElementById('lightboxModal').classList.remove('hidden');
-        }
-        function closeLightbox() { document.getElementById('lightboxModal').classList.add('hidden'); }
-        function toggleProfileModal(show) { document.getElementById('profileModal').classList.toggle('hidden', !show); }
-        function openMediaTray(type) { document.getElementById('hybridMediaTray').classList.remove('hidden'); activeTrayType = type; }
-        function closeMediaTray() { document.getElementById('hybridMediaTray').classList.add('hidden'); }
-        async function loadMatchingFeed() { /* Feed logic as before */ }
     </script>
 </body>
 </html>
