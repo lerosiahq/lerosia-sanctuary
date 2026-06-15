@@ -5,79 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L'Erosia — Sanctuary</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #0a0a0a; color: #ffffff; }
-        .glass { background: rgba(18, 18, 18, 0.9); backdrop-filter: blur(10px); }
-    </style>
 </head>
-<body class="min-h-screen">
+<body class="bg-[#0a0a0a] text-white font-sans">
 
-    <!-- Header: Consistent across all views -->
-    <header class="glass sticky top-0 z-50 border-b border-[#222] p-4 flex justify-between items-center">
-        <div class="text-[#8d0b0b] font-bold tracking-[0.2em] uppercase">L'Erosia</div>
-        <div class="flex items-center space-x-4">
-            <span id="globalStatus" class="text-[10px] text-green-500 uppercase">● Active</span>
-            <button onclick="navigate('profile')" class="text-xs uppercase text-gray-400">Profile</button>
-        </div>
-    </header>
-
-    <!-- Main Dynamic Container -->
-    <main id="appContainer" class="p-4 max-w-md mx-auto">
-        <!-- Views will be injected here: Feed, Profile, Chat -->
+    <main id="app" class="p-6 max-w-lg mx-auto min-h-screen flex items-center justify-center">
+        <!-- The app will inject the Login page here first -->
     </main>
 
     <script>
-        // Target Market Configuration
-        const markets = {
-            tier1: ['UAE', 'Qatar', 'Saudi Arabia', 'Kuwait'],
-            tier2: ['USA', 'UK', 'Australia', 'Canada'],
-            tier3: ['Germany', 'Netherlands', 'France']
-        };
+        // Simple state management
+        let isAuthenticated = false;
 
-        // Navigation Engine
-        function navigate(view, params = {}) {
-            const container = document.getElementById('appContainer');
+        function renderView(view) {
+            const app = document.getElementById('app');
             
-            if (view === 'profile') {
-                container.innerHTML = `
-                    <div class="space-y-6 animate-in fade-in">
-                        <h2 class="text-xs uppercase tracking-widest text-gray-500">Edit Identity</h2>
-                        <div class="bg-[#121212] p-6 rounded-2xl space-y-4">
-                            <input type="text" placeholder="Display Name" class="w-full bg-[#1a1a1a] p-3 rounded-lg border border-[#333]">
-                            <div class="flex space-x-2">
-                                <input type="number" placeholder="Age" class="w-1/2 bg-[#1a1a1a] p-3 rounded-lg border border-[#333]">
-                                <input type="text" placeholder="Location" class="w-1/2 bg-[#1a1a1a] p-3 rounded-lg border border-[#333]">
-                            </div>
-                            <button class="w-full bg-[#8d0b0b] py-3 rounded-lg uppercase text-xs font-bold">Save Changes</button>
-                        </div>
-                        <h2 class="text-xs uppercase tracking-widest text-gray-500">Galleries</h2>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="h-32 bg-[#1a1a1a] border border-dashed border-[#444] rounded-lg flex items-center justify-center cursor-pointer">Add Public</div>
-                            <div class="h-32 bg-[#1a1a1a] border border-dashed border-[#444] rounded-lg flex items-center justify-center cursor-pointer">Add Private</div>
-                        </div>
+            if (view === 'login') {
+                app.innerHTML = `
+                    <div class="w-full space-y-6 text-center animate-in fade-in">
+                        <h1 class="text-2xl font-bold tracking-[0.2em] text-[#8d0b0b] uppercase">L'Erosia</h1>
+                        <p class="text-gray-400 text-sm">Enter your sanctuary.</p>
+                        <button onclick="login()" class="w-full bg-[#8d0b0b] p-4 rounded-lg font-bold uppercase tracking-widest">Sign In</button>
                     </div>
                 `;
-            } else if (view === 'chat') {
-                container.innerHTML = `
-                    <div class="flex flex-col h-[80vh]">
-                        <div class="flex justify-between items-center mb-4">
-                            <div><h3 class="font-bold">${params.name || 'User'}</h3><p class="text-[10px] text-green-500">Active</p></div>
+            } else if (view === 'feed') {
+                app.innerHTML = `
+                    <div class="w-full space-y-6">
+                        <header class="flex justify-between items-center pb-6 border-b border-[#222]">
+                            <div class="text-[#8d0b0b] font-bold tracking-[0.2em] uppercase">L'Erosia</div>
+                            <button onclick="renderView('profile')" class="text-[10px] uppercase text-gray-400">Profile</button>
+                        </header>
+                        <div class="p-6 bg-[#121212] rounded-2xl border border-[#222]">
+                            <p class="text-[10px] text-gray-500 uppercase">Account Status</p>
+                            <p class="text-lg font-bold">Premium Sanctuary Active</p>
                         </div>
-                        <div class="flex-1 bg-[#121212] rounded-xl p-4 mb-4 overflow-y-auto">
-                            <!-- Messages -->
-                        </div>
-                        <div class="bg-[#121212] p-3 rounded-xl flex items-center space-x-2">
-                            <button class="text-xl">🖼️</button>
-                            <input type="text" class="flex-1 bg-transparent outline-none" placeholder="Message...">
-                            <button class="text-xl">😊</button>
-                        </div>
+                        <h2 class="text-xs uppercase text-[#8d0b0b] font-bold">Matched Desires</h2>
+                        <div class="text-gray-400 text-sm italic">No active desires matched.</div>
                     </div>
                 `;
             }
         }
-        
-        // Load initial view
-        navigate('feed');
+
+        function login() {
+            isAuthenticated = true;
+            renderView('feed');
+        }
+
+        // Initialize at the login screen
+        renderView('login');
     </script>
 </body>
 </html>
