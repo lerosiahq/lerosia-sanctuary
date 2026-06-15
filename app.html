@@ -66,3 +66,44 @@
             
             // Mark the start time for the 60-minute window
             globalUnlockedTimestamps[targetId] = Date.now();
+
+            const isVideo = premiumVaultMedia?.includes('.mp4');
+            const assetElement = premiumVaultMedia ? (isVideo ? `<video src="${premiumVaultMedia}" autoplay loop muted class="w-full h-full object-cover"></video>` : `<img src="${premiumVaultMedia}" class="w-full h-full object-cover">`) : "";
+
+            msgContainer.innerHTML = `
+                <div class="w-full bg-[#141414] border border-[#8d0b0b]/40 rounded-lg p-2" id="vaultContainer">
+                    <div class="flex justify-between items-center text-[9px] text-gray-400">
+                        <span class="text-amber-500 font-bold uppercase">⚡ Premium Stream</span>
+                        <span id="countdownTicker" data-target-id="${targetId}" class="text-red-500 font-mono">60:00</span>
+                    </div>
+                    <div class="w-full h-44 mt-2 bg-black rounded overflow-hidden">${assetElement}</div>
+                </div>`;
+        }
+
+        // 3. Interval Checker
+        function updateChatSelfDestructTimers() {
+            const ticker = document.getElementById('countdownTicker');
+            if (!ticker) return;
+
+            const targetId = ticker.getAttribute('data-target-id');
+            const startTime = globalUnlockedTimestamps[targetId];
+            if (!startTime) return;
+
+            const remaining = 3600000 - (Date.now() - startTime);
+
+            if (remaining <= 0) {
+                document.getElementById('vaultContainer').innerHTML = 
+                    `<p class="text-[10px] text-gray-500 text-center uppercase py-4">🔒 Asset Destroyed from Chat View</p>`;
+            } else {
+                const mins = Math.floor(remaining / 60000);
+                const secs = Math.floor((remaining % 60000) / 1000);
+                ticker.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        setInterval(updateChatSelfDestructTimers, 1000);
+
+        function closeChat() { document.getElementById('chatModal').classList.add('hidden'); }
+    </script>
+</body>
+</html>
